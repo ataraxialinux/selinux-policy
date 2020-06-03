@@ -1,0 +1,206 @@
+#
+#
+# User-specific file contexts, generated via libsemanage
+# use semanage command to manage system users to change the file_context
+#
+#
+
+
+#
+# Home Context for user user_u
+#
+
+/home/[^/]+/.+	user_u:object_r:user_home_t:s0
+/home/[^/]+/.maildir(/.*)?	user_u:object_r:mail_home_rw_t:s0
+/home/[^/]+/.*/plugins/nppdf\.so.*	--	user_u:object_r:textrel_shlib_t:s0
+/home/[^/]+/((www)|(web)|(public_html))(/.+)?	user_u:object_r:httpd_user_content_t:s0
+/home/[^/]+/((www)|(web)|(public_html))/cgi-bin(/.+)?	user_u:object_r:httpd_user_script_exec_t:s0
+/home/[^/]+/((www)|(web)|(public_html))(/.*)?/\.htaccess	--	user_u:object_r:httpd_user_htaccess_t:s0
+/home/[^/]+/((www)|(web)|(public_html))(/.*)?/logs(/.*)?	user_u:object_r:httpd_user_ra_content_t:s0
+/home/[^/]+/a?quota\.(user|group)	--	user_u:object_r:quota_db_t:s0
+/home/[^/]+/\.nv(/.*)?	user_u:object_r:cache_home_t:s0
+/home/[^/]+/bin(/.*)?	user_u:object_r:home_bin_t:s0
+/home/[^/]+/\.kde(/.*)?	user_u:object_r:config_home_t:s0
+/home/[^/]+/\.lyx(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.orc(/.*)?	user_u:object_r:gstreamer_home_t:s0
+/home/[^/]+/\.pki(/.*)?	user_u:object_r:home_cert_t:s0
+/home/[^/]+/\.ssh(/.*)?	user_u:object_r:ssh_home_t:s0
+/home/[^/]+/\.uml(/.*)?	user_u:object_r:uml_rw_t:s0
+/home/[^/]+/\.DCOP.*	--	user_u:object_r:iceauth_home_t:s0
+/home/[^/]+/\.dmrc.*	--	user_u:object_r:xdm_home_t:s0
+/home/[^/]+/Audio(/.*)?	user_u:object_r:audio_home_t:s0
+/home/[^/]+/Music(/.*)?	user_u:object_r:audio_home_t:s0
+/home/[^/]+/\.cert(/.*)?	user_u:object_r:home_cert_t:s0
+/home/[^/]+/\.dbus(/.*)?	user_u:object_r:dbus_home_t:s0
+/home/[^/]+/\.java(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.wine(/.*)?	user_u:object_r:wine_home_t:s0
+/home/[^/]+/\.xine(/.*)?	user_u:object_r:config_home_t:s0
+/home/[^/]+/\.Xauth.*	--	user_u:object_r:xauth_home_t:s0
+/home/[^/]+/\.xauth.*	--	user_u:object_r:xauth_home_t:s0
+/home/[^/]+/\.gvfs/.*	<<none>>
+/home/[^/]+/\.adobe(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.cache(/.*)?	user_u:object_r:cache_home_t:s0
+/home/[^/]+/\.debug(/.*)?	<<none>>
+/home/[^/]+/\.fonts(/.*)?	user_u:object_r:user_fonts_t:s0
+/home/[^/]+/\.gnash(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.gnupg(/.+)?	user_u:object_r:gpg_secret_t:s0
+/home/[^/]+/\.irssi(/.*)?	user_u:object_r:irc_home_t:s0
+/home/[^/]+/\.local(/.*)?	user_u:object_r:gconf_home_t:s0
+/home/[^/]+/\.pulse(/.*)?	user_u:object_r:pulseaudio_home_t:s0
+/home/[^/]+/\.pyzor(/.*)?	user_u:object_r:spamc_home_t:s0
+/home/[^/]+/\.razor(/.*)?	user_u:object_r:spamc_home_t:s0
+/home/[^/]+/\.spamd(/.*)?	user_u:object_r:spamc_home_t:s0
+/home/[^/]+/\.webex(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/irclog(/.*)?	user_u:object_r:irc_home_t:s0
+/home/[^/]+/vmware(/.*)?	user_u:object_r:vmware_file_t:s0
+/home/[^/]+/\.gconf(d)?(/.*)?	user_u:object_r:gconf_home_t:s0
+/home/[^/]+/Maildir(/.*)?	user_u:object_r:mail_home_rw_t:s0
+/home/[^/]+/\.IBMERS(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.config(/.*)?	user_u:object_r:config_home_t:s0
+/home/[^/]+/\.galeon(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.gnome2(/.*)?	user_u:object_r:gnome_home_t:s0
+/home/[^/]+/\.kismet(/.*)?	user_u:object_r:kismet_home_t:s0
+/home/[^/]+/\.screen(/.*)?	user_u:object_r:screen_home_t:s0
+/home/[^/]+/\.spicec(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.tvtime(/.*)?	user_u:object_r:tvtime_home_t:s0
+/home/[^/]+/\.vmware(/.*)?	user_u:object_r:vmware_file_t:s0
+/home/[^/]+/\.yubico(/.*)?	user_u:object_r:auth_home_t:s0
+/home/[^/]+/POkemon.*(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.vmware[^/]*/.*\.cfg	--	user_u:object_r:vmware_conf_t:s0
+/home/[^/]+/\.forward[^/]*	--	user_u:object_r:mail_home_t:s0
+/home/[^/]+/\.Private(/.*)?	user_u:object_r:ecryptfs_t:s0
+/home/[^/]+/\.fonts\.d(/.*)?	user_u:object_r:user_fonts_config_t:s0
+/home/[^/]+/\.icedtea(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.libvirt(/.*)?	user_u:object_r:virt_home_t:s0
+/home/[^/]+/\.mozilla(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.mplayer(/.*)?	user_u:object_r:mplayer_home_t:s0
+/home/[^/]+/\.phoenix(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.ecryptfs(/.*)?	user_u:object_r:ecryptfs_t:s0
+/home/[^/]+/\.netscape(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.virtinst(/.*)?	user_u:object_r:virt_home_t:s0
+/home/[^/]+/\.ICAClient(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.cache/gdm(/.*)?	user_u:object_r:xdm_home_t:s0
+/home/[^/]+/\.color/icc(/.*)?	user_u:object_r:icc_data_home_t:s0
+/home/[^/]+/\.local/bin(/.*)?	user_u:object_r:home_bin_t:s0
+/home/[^/]+/\.quakelive(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.wireshark(/.*)?	user_u:object_r:wireshark_home_t:s0
+/home/[^/]+/public_git(/.*)?	user_u:object_r:git_user_content_t:s0
+/home/[^/]+/\.Xauthority.*	--	user_u:object_r:xauth_home_t:s0
+/home/[^/]+/\.serverauth.*	--	user_u:object_r:xauth_home_t:s0
+/home/[^/]+/\.gstreamer-.*	user_u:object_r:gstreamer_home_t:s0
+/home/[^/]+/\.fontconfig(/.*)?	user_u:object_r:user_fonts_cache_t:s0
+/home/[^/]+/\.fonts/auto(/.*)?	user_u:object_r:user_fonts_cache_t:s0
+/home/[^/]+/\.macromedia(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.nv/GLCache(/.*)?	user_u:object_r:gstreamer_home_t:s0
+/home/[^/]+/\.thumbnails(/.*)?	user_u:object_r:thumb_home_t:s0
+/home/[^/]+/\.ansible/cp/.*	-s	user_u:object_r:ssh_home_t:s0
+/home/[^/]+/missfont\.log.*	user_u:object_r:thumb_home_t:s0
+/home/[^/]+/\.cache/dconf(/.*)?	user_u:object_r:config_home_t:s0
+/home/[^/]+/\.cache/wocky(/.*)?	user_u:object_r:telepathy_gabble_cache_home_t:s0
+/home/[^/]+/\.esmtp_queue(/.*)?	user_u:object_r:mail_home_rw_t:s0
+/home/[^/]+/\.local/share(/.*)?	user_u:object_r:data_home_t:s0
+/home/[^/]+/\.texlive2012(/.*)?	user_u:object_r:texlive_home_t:s0
+/home/[^/]+/\.texlive2013(/.*)?	user_u:object_r:texlive_home_t:s0
+/home/[^/]+/\.texlive2014(/.*)?	user_u:object_r:texlive_home_t:s0
+/home/[^/]+/\.thunderbird(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.ICEauthority.*	--	user_u:object_r:iceauth_home_t:s0
+/home/[^/]+/\.fonts\.cache-.*	--	user_u:object_r:user_fonts_cache_t:s0
+/home/[^/]+/\.config/pulse(/.*)?	user_u:object_r:pulseaudio_home_t:s0
+/home/[^/]+/\.gcjwebplugin(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.grl-podcasts(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.libvirt/qemu(/.*)?	user_u:object_r:svirt_home_t:s0
+/home/[^/]+/\.polipo-cache(/.*)?	user_u:object_r:polipo_cache_home_t:s0
+/home/[^/]+/\.spamassassin(/.*)?	user_u:object_r:spamc_home_t:s0
+/home/[^/]+/\.cache/GLCache(/.*)?	user_u:object_r:gstreamer_home_t:s0
+/home/[^/]+/\.cache/libvirt(/.*)?	user_u:object_r:virt_home_t:s0
+/home/[^/]+/\.cache/mozilla(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.icedteaplugin(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/zimbrauserdata(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.wayland-errors.*	--	user_u:object_r:xdm_home_t:s0
+/home/[^/]+/VirtualMachines(/.*)?	user_u:object_r:virt_home_t:s0
+/home/[^/]+/\.cache/chromium(/.*)?	user_u:object_r:chrome_sandbox_home_t:s0
+/home/[^/]+/\.config/libvirt(/.*)?	user_u:object_r:virt_home_t:s0
+/home/[^/]+/\.xsession-errors.*	--	user_u:object_r:xdm_home_t:s0
+/home/[^/]+/\.cache/telepathy(/.*)?	user_u:object_r:telepathy_cache_home_t:s0
+/home/[^/]+/\.config/chromium(/.*)?	user_u:object_r:chrome_sandbox_home_t:s0
+/home/[^/]+/\.gnome2/keyrings(/.*)?	user_u:object_r:gkeyringd_gnome_home_t:s0
+/home/[^/]+/\.local/share/icc(/.*)?	user_u:object_r:icc_data_home_t:s0
+/home/[^/]+/\.mission-control(/.*)?	user_u:object_r:telepathy_mission_control_home_t:s0
+/home/[^/]+/cxoffice/bin/wine.+	--	user_u:object_r:wine_exec_t:s0
+/home/[^/]+/\.cache/gstreamer-.*	user_u:object_r:gstreamer_home_t:s0
+/home/[^/]+/\.cache/fontconfig(/.*)?	user_u:object_r:user_fonts_cache_t:s0
+/home/[^/]+/\.cache/thumbnails(/.*)?	user_u:object_r:thumb_home_t:s0
+/home/[^/]+/\.juniper_networks(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.local/share/xorg(/.*)?	user_u:object_r:xdm_home_t:s0
+/home/[^/]+/\.cache/gnome-boxes(/.*)?	user_u:object_r:virt_home_t:s0
+/home/[^/]+/\.cache/icedtea-web(/.*)?	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.config/fontconfig(/.*)?	user_u:object_r:user_fonts_config_t:s0
+/home/[^/]+/\.local/share/fonts(/.*)?	user_u:object_r:user_fonts_t:s0
+/home/[^/]+/\.cache/libvirt/qemu(/.*)?	user_u:object_r:svirt_home_t:s0
+/home/[^/]+/\.telepathy-sunshine(/.*)?	user_u:object_r:telepathy_sunshine_home_t:s0
+/home/[^/]+/VirtualMachines/isos(/.*)?	user_u:object_r:virt_content_t:s0
+/home/[^/]+/\.cache/google-chrome(/.*)?	user_u:object_r:chrome_sandbox_home_t:s0
+/home/[^/]+/\.config/libvirt/qemu(/.*)?	user_u:object_r:svirt_home_t:s0
+/home/[^/]+/\.config/systemd/user(/.*)?	user_u:object_r:systemd_unit_file_t:s0
+/home/[^/]+/\.local/share/systemd(/.*)?	user_u:object_r:systemd_home_t:s0
+/home/[^/]+/\.local/share/TpLogger(/.*)?	user_u:object_r:telepathy_logger_data_home_t:s0
+/home/[^/]+/\.local/share/keyrings(/.*)?	user_u:object_r:gkeyringd_gnome_home_t:s0
+/home/[^/]+/\.cache/libvirt-sandbox(/.*)?	user_u:object_r:virt_home_t:s0
+/home/[^/]+/\.local/share/telepathy(/.*)?	user_u:object_r:telepathy_data_home_t:s0
+/home/[^/]+/\.cache/telepathy/gabble(/.*)?	user_u:object_r:telepathy_gabble_cache_home_t:s0
+/home/[^/]+/\.cache/telepathy/logger(/.*)?	user_u:object_r:telepathy_logger_cache_home_t:s0
+/home/[^/]+/\.local/share/libvirt/boot(/.*)?	user_u:object_r:svirt_home_t:s0
+/home/[^/]+/\.local/share/libvirt/images(/.*)?	user_u:object_r:svirt_home_t:s0
+/home/[^/]+/\.cache/google-chrome-unstable(/.*)?	user_u:object_r:chrome_sandbox_home_t:s0
+/home/[^/]+/\.cache/telepathy/avatars/gabble(/.*)?	user_u:object_r:telepathy_gabble_cache_home_t:s0
+/home/[^/]+/\.local/share/gnome-boxes/images(/.*)?	user_u:object_r:svirt_home_t:s0
+/home/[^/]+/\.local/share/telepathy/mission-control(/.*)?	user_u:object_r:telepathy_mission_control_data_home_t:s0
+/home/[^/]+/\.local/share/networkmanagement/certificates(/.*)?	user_u:object_r:home_cert_t:s0
+/home/[^/]+/\.kde/share/apps/networkmanagement/certificates(/.*)?	user_u:object_r:home_cert_t:s0
+/home/[^/]+	-d	user_u:object_r:user_home_dir_t:s0
+/home/[^/]+	-l	user_u:object_r:user_home_dir_t:s0
+/home/[^/]+/abc	--	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/tmp	-d	user_u:object_r:user_tmp_t:s0
+/home/[^/]+/\.tmp	-d	user_u:object_r:user_tmp_t:s0
+/home/[^/]+/\.mailrc	--	user_u:object_r:mail_home_t:s0
+/home/[^/]+/\.my\.cnf	--	user_u:object_r:mysqld_home_t:s0
+/home/[^/]+/\.polipo	--	user_u:object_r:polipo_config_home_t:s0
+/home/[^/]+/\.rhosts	--	user_u:object_r:rlogind_home_t:s0
+/home/[^/]+/\.rlogin	--	user_u:object_r:rlogind_home_t:s0
+/home/[^/]+/\.shosts	user_u:object_r:ssh_home_t:s0
+/home/[^/]+/\.esmtprc	--	user_u:object_r:mail_home_t:s0
+/home/[^/]+/\.ircmotd	--	user_u:object_r:irc_home_t:s0
+/home/[^/]+/\.k5login	--	user_u:object_r:krb5_home_t:s0
+/home/[^/]+/\.k5users	--	user_u:object_r:krb5_home_t:s0
+/home/[^/]+/\.manpath	--	user_u:object_r:mandb_home_t:s0
+/home/[^/]+/\.asoundrc	--	user_u:object_r:alsa_home_t:s0
+/home/[^/]+/\.esd_auth	--	user_u:object_r:pulseaudio_home_t:s0
+/home/[^/]+/\.screenrc	--	user_u:object_r:screen_home_t:s0
+/home/[^/]+/\.cvsignore	--	user_u:object_r:cvs_home_t:s0
+/home/[^/]+/\.hushlogin	--	user_u:object_r:local_login_home_t:s0
+/home/[^/]+/\.tmux\.conf	--	user_u:object_r:screen_home_t:s0
+/home/[^/]+/\.Xdefaults	user_u:object_r:config_home_t:s0
+/home/[^/]+/\.fonts\.conf	--	user_u:object_r:user_fonts_config_t:s0
+/home/[^/]+/\.procmailrc	--	user_u:object_r:procmail_home_t:s0
+/home/[^/]+/dead\.letter	--	user_u:object_r:mail_home_t:s0
+/home/[^/]+/mozilla\.pdf	--	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.fetchmailrc	--	user_u:object_r:fetchmail_home_t:s0
+/home/[^/]+/\.pulse-cookie	--	user_u:object_r:pulseaudio_home_t:s0
+/home/[^/]+/\.gnashpluginrc	user_u:object_r:mozilla_home_t:s0
+/home/[^/]+/\.grl-bookmarks	user_u:object_r:gstreamer_home_t:s0
+/home/[^/]+/\.gnupg/log-socket	user_u:object_r:gpg_agent_tmp_t:s0
+/home/[^/]+/\.grl-metadata-store	user_u:object_r:gstreamer_home_t:s0
+/home/[^/]+/\.google_authenticator	user_u:object_r:auth_home_t:s0
+/home/[^/]+/\.cache/\.mc_connections	--	user_u:object_r:telepathy_mission_control_cache_home_t:s0
+/home/[^/]+/\.google_authenticator~	user_u:object_r:auth_home_t:s0
+/home/a?quota\.(user|group)	--	system_u:object_r:quota_db_t:s0
+/home/lost\+found/.*	<<none>>
+/home	-d	system_u:object_r:home_root_t:s0-s15:c0.c1023
+/home	-l	system_u:object_r:home_root_t:s0
+/home/\-inst	-d	system_u:object_r:home_root_t:s0-s15:c0.c1023
+/home/\.journal	<<none>>
+/home/home-inst	-d	system_u:object_r:home_root_t:s0-s15:c0.c1023
+/home/lost\+found	-d	system_u:object_r:lost_found_t:s15:c0.c1023
+/tmp/gconfd-[^/]+/.*	--	user_u:object_r:gconf_tmp_t:s0
+/tmp/gconfd-[^/]+	-d	user_u:object_r:user_tmp_t:s0
+/var/spool/cron/[^/]+	--	user_u:object_r:user_cron_spool_t:s0
