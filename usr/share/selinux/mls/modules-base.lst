@@ -1,1 +1,0 @@
-bootloader dmesg netutils sudo su usermanage seunshare userdomain unlabelednet auditadm logadm secadm staff sysadm_secadm sysadm unprivuser postgresql ssh xserver application authlogin clock fstools getty hostname init ipsec iptables libraries locallogin logging lvm miscfiles modutils mount netlabel selinuxutil setrans sysnetwork systemd udev 
