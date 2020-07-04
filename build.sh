@@ -1,6 +1,7 @@
 #!/usr/bin/sh
-make bare
-make conf NAME=mls DISTRO=redhat SYSTEMD=y UBAC=y
-make NAME=mls DISTRO=redhat SYSTEMD=y UBAC=y
-make install DESTDIR="$1" NAME=mls DISTRO=redhat SYSTEMD=y UBAC=y
-make install-headers DESTDIR="$1" NAME=mls DISTRO=redhat SYSTEMD=y UBAC=y
+
+make bare -j
+make conf NAME=mls TYPE=mls DISTRO=redhat SYSTEMD=y UBAC=n MONOLITHIC=n DIRECT_INITRC=y UNK_PERMS=deny -j
+make all NAME=mls TYPE=mls DISTRO=redhat SYSTEMD=y UBAC=n MONOLITHIC=n DIRECT_INITRC=y UNK_PERMS=deny -j
+make install DESTDIR="$1" NAME=mls TYPE=mls DISTRO=redhat SYSTEMD=y UBAC=n MONOLITHIC=n DIRECT_INITRC=y UNK_PERMS=deny -j
+make install-headers DESTDIR="$1" NAME=mls TYPE=mls DISTRO=redhat SYSTEMD=y UBAC=n MONOLITHIC=n DIRECT_INITRC=y UNK_PERMS=deny -j
