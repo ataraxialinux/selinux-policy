@@ -34,7 +34,7 @@ make -j UNK_PERMS=deny NAME=mls TYPE=mls DISTRO=redhat UBAC=n DIRECT_INITRC=n MO
 make -j UNK_PERMS=deny NAME=mls TYPE=mls DISTRO=redhat UBAC=n DIRECT_INITRC=n MONOLITHIC=n DESTDIR="$dir/root" MLS_CATS=1024 MCS_CATS=1024 install-appconfig
 make -j UNK_PERMS=deny NAME=mls TYPE=mls DISTRO=redhat UBAC=n DIRECT_INITRC=n MONOLITHIC=n DESTDIR="$dir/root" MLS_CATS=1024 MCS_CATS=1024 SEMODULE="semodule -p $dir/root -X 100 " load
 
-mkdir -p "$dir/root"//etc/selinux/mls/logins
+mkdir -p "$dir/root"/etc/selinux/mls/logins
 touch "$dir/root"/etc/selinux/mls/contexts/files/file_contexts.subs
 install -m0644 "$cwd"/stuff/securetty_types-mls "$dir/root"/etc/selinux/mls/contexts/securetty_types
 install -m0644 "$cwd"/stuff/file_contexts.subs_dist "$dir/root"/etc/selinux/mls/contexts/files
