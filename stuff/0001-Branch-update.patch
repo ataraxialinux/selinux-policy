@@ -1,0 +1,1444 @@
+From 10accbaee3d8ccd856fd394e19fcfbf789706830 Mon Sep 17 00:00:00 2001
+From: Ishimoto Shinobu <nagakamira@gmail.com>
+Date: Mon, 7 Dec 2020 05:12:38 +0900
+Subject: [PATCH] Branch update
+
+Signed-off-by: Ishimoto Shinobu <nagakamira@gmail.com>
+---
+ config/file_contexts.subs_dist        | 16 ++++++++++++++++
+ policy/modules/admin/brctl.fc         |  1 +
+ policy/modules/admin/dmesg.fc         |  1 +
+ policy/modules/admin/dmesg.te         |  2 ++
+ policy/modules/admin/rpm.fc           |  2 ++
+ policy/modules/admin/shutdown.fc      |  1 +
+ policy/modules/admin/su.fc            |  2 ++
+ policy/modules/admin/usermanage.fc    |  4 ++++
+ policy/modules/apps/screen.fc         |  1 +
+ policy/modules/apps/vlock.fc          |  1 +
+ policy/modules/kernel/corecommands.fc |  5 +++++
+ policy/modules/kernel/domain.te       |  3 +++
+ policy/modules/kernel/files.fc        |  1 +
+ policy/modules/kernel/files.if        |  8 ++++++++
+ policy/modules/kernel/kernel.te       |  7 +++++++
+ policy/modules/kernel/terminal.if     | 23 ++++++++++++++++++++---
+ policy/modules/roles/sysadm.te        | 10 ++++++++++
+ policy/modules/services/avahi.te      |  3 +++
+ policy/modules/services/bind.fc       |  2 ++
+ policy/modules/services/bluetooth.te  |  3 +++
+ policy/modules/services/cron.fc       |  1 +
+ policy/modules/services/kerberos.fc   | 10 ++++++++++
+ policy/modules/services/ldap.fc       |  5 +++++
+ policy/modules/services/ntp.fc        |  1 +
+ policy/modules/services/ntp.te        |  6 ++++++
+ policy/modules/services/postgresql.fc | 11 +++++++++++
+ policy/modules/services/rdisc.te      |  2 ++
+ policy/modules/services/rngd.fc       |  1 +
+ policy/modules/services/rngd.te       |  3 ++-
+ policy/modules/services/rpc.fc        |  2 ++
+ policy/modules/services/rpc.te        |  6 +++++-
+ policy/modules/services/rpcbind.te    | 11 +++++++++--
+ policy/modules/services/ssh.fc        |  1 +
+ policy/modules/services/ssh.te        |  4 +---
+ policy/modules/system/authlogin.fc    |  1 +
+ policy/modules/system/authlogin.te    |  2 +-
+ policy/modules/system/clock.fc        |  1 +
+ policy/modules/system/fstools.fc      | 10 ++++++++++
+ policy/modules/system/getty.fc        |  1 +
+ policy/modules/system/getty.te        |  2 ++
+ policy/modules/system/hostname.fc     |  2 ++
+ policy/modules/system/init.fc         |  4 +++-
+ policy/modules/system/init.te         |  8 ++++++++
+ policy/modules/system/locallogin.fc   |  1 +
+ policy/modules/system/logging.fc      |  2 ++
+ policy/modules/system/logging.if      |  9 +++++++++
+ policy/modules/system/logging.te      | 16 +++++++++++++++-
+ policy/modules/system/mount.te        |  2 ++
+ policy/modules/system/selinuxutil.te  |  6 ++----
+ policy/modules/system/setrans.te      |  6 +++---
+ policy/modules/system/sysnetwork.fc   |  5 +++++
+ policy/modules/system/sysnetwork.te   |  2 ++
+ policy/modules/system/systemd.te      | 26 ++++++++++++++++++++++++--
+ policy/modules/system/udev.fc         |  2 ++
+ policy/modules/system/udev.te         |  5 +++++
+ 55 files changed, 251 insertions(+), 22 deletions(-)
+
+diff --git a/config/file_contexts.subs_dist b/config/file_contexts.subs_dist
+index 346d920..67f4768 100644
+--- a/config/file_contexts.subs_dist
++++ b/config/file_contexts.subs_dist
+@@ -31,3 +31,19 @@
+ # not for refpolicy intern, but for /var/run using applications,
+ # like systemd tmpfiles or systemd socket configurations
+ /var/run /run
++
++# volatile aliases
++# ensure the policy applied to the base filesystem objects are reflected in the
++# volatile hierarchy.
++/var/volatile/log /var/log
++/var/volatile/tmp /var/tmp
++
++# busybox aliases
++# quickly match up the busybox built-in tree to the base filesystem tree
++/usr/lib/busybox/bin /usr/bin
++/usr/lib/busybox/sbin /usr/sbin
++/usr/lib/busybox/usr /usr
++
++# The genhomedircon.py will expand /root home directory to /home/root
++# Add an aliase for it
++/root /home/root
+diff --git a/policy/modules/admin/brctl.fc b/policy/modules/admin/brctl.fc
+index ed472f0..2a852b0 100644
+--- a/policy/modules/admin/brctl.fc
++++ b/policy/modules/admin/brctl.fc
+@@ -1,3 +1,4 @@
+ /usr/bin/brctl	--	gen_context(system_u:object_r:brctl_exec_t,s0)
+ 
+ /usr/sbin/brctl	--	gen_context(system_u:object_r:brctl_exec_t,s0)
++/usr/sbin/brctl\.bridge-utils	--	gen_context(system_u:object_r:brctl_exec_t,s0)
+diff --git a/policy/modules/admin/dmesg.fc b/policy/modules/admin/dmesg.fc
+index e52fdfc..526b92e 100644
+--- a/policy/modules/admin/dmesg.fc
++++ b/policy/modules/admin/dmesg.fc
+@@ -1 +1,2 @@
+ /usr/bin/dmesg		--		gen_context(system_u:object_r:dmesg_exec_t,s0)
++/usr/bin/dmesg\.util-linux		--		gen_context(system_u:object_r:dmesg_exec_t,s0)
+diff --git a/policy/modules/admin/dmesg.te b/policy/modules/admin/dmesg.te
+index 5bbe71b..228baec 100644
+--- a/policy/modules/admin/dmesg.te
++++ b/policy/modules/admin/dmesg.te
+@@ -51,6 +51,8 @@ miscfiles_read_localization(dmesg_t)
+ userdom_dontaudit_use_unpriv_user_fds(dmesg_t)
+ userdom_use_user_terminals(dmesg_t)
+ 
++mls_file_read_to_clearance(dmesg_t)
++
+ optional_policy(`
+ 	seutil_sigchld_newrole(dmesg_t)
+ ')
+diff --git a/policy/modules/admin/rpm.fc b/policy/modules/admin/rpm.fc
+index aaf530c..618b18c 100644
+--- a/policy/modules/admin/rpm.fc
++++ b/policy/modules/admin/rpm.fc
+@@ -66,4 +66,6 @@ ifdef(`distro_redhat',`
+ 
+ ifdef(`enable_mls',`
+ /usr/sbin/cpio	--	gen_context(system_u:object_r:rpm_exec_t,s0)
++/usr/bin/cpio	--	gen_context(system_u:object_r:rpm_exec_t,s0)
++/usr/bin/cpio\.cpio	--	gen_context(system_u:object_r:rpm_exec_t,s0)
+ ')
+diff --git a/policy/modules/admin/shutdown.fc b/policy/modules/admin/shutdown.fc
+index bf51c10..91ed72b 100644
+--- a/policy/modules/admin/shutdown.fc
++++ b/policy/modules/admin/shutdown.fc
+@@ -5,5 +5,6 @@
+ /usr/lib/upstart/shutdown	--	gen_context(system_u:object_r:shutdown_exec_t,s0)
+ 
+ /usr/sbin/shutdown	--	gen_context(system_u:object_r:shutdown_exec_t,s0)
++/usr/sbin/shutdown\.sysvinit	--	gen_context(system_u:object_r:shutdown_exec_t,s0)
+ 
+ /run/shutdown\.pid	--	gen_context(system_u:object_r:shutdown_runtime_t,s0)
+diff --git a/policy/modules/admin/su.fc b/policy/modules/admin/su.fc
+index 3375c96..a9868cd 100644
+--- a/policy/modules/admin/su.fc
++++ b/policy/modules/admin/su.fc
+@@ -1,3 +1,5 @@
+ /usr/(local/)?bin/ksu	--	gen_context(system_u:object_r:su_exec_t,s0)
+ /usr/bin/kdesu		--	gen_context(system_u:object_r:su_exec_t,s0)
+ /usr/bin/su		--	gen_context(system_u:object_r:su_exec_t,s0)
++/usr/bin/su\.shadow		--	gen_context(system_u:object_r:su_exec_t,s0)
++/usr/bin/su\.util-linux		--	gen_context(system_u:object_r:su_exec_t,s0)
+diff --git a/policy/modules/admin/usermanage.fc b/policy/modules/admin/usermanage.fc
+index 620eefc..6a051f8 100644
+--- a/policy/modules/admin/usermanage.fc
++++ b/policy/modules/admin/usermanage.fc
+@@ -4,7 +4,9 @@ ifdef(`distro_debian',`
+ 
+ /usr/bin/chage		--	gen_context(system_u:object_r:passwd_exec_t,s0)
+ /usr/bin/chfn		--	gen_context(system_u:object_r:chfn_exec_t,s0)
++/usr/bin/chfn\.shadow		--	gen_context(system_u:object_r:chfn_exec_t,s0)
+ /usr/bin/chsh		--	gen_context(system_u:object_r:chfn_exec_t,s0)
++/usr/bin/chsh\.shadow		--	gen_context(system_u:object_r:chfn_exec_t,s0)
+ /usr/bin/crack_[a-z]*	--	gen_context(system_u:object_r:crack_exec_t,s0)
+ /usr/bin/cracklib-[a-z]* --	gen_context(system_u:object_r:crack_exec_t,s0)
+ /usr/bin/gpasswd	--	gen_context(system_u:object_r:groupadd_exec_t,s0)
+@@ -14,6 +16,7 @@ ifdef(`distro_debian',`
+ /usr/bin/grpconv	--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
+ /usr/bin/grpunconv	--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
+ /usr/bin/passwd		--	gen_context(system_u:object_r:passwd_exec_t,s0)
++/usr/bin/passwd\.shadow		--	gen_context(system_u:object_r:passwd_exec_t,s0)
+ /usr/bin/pwconv		--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
+ /usr/bin/pwunconv	--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
+ /usr/bin/useradd	--	gen_context(system_u:object_r:useradd_exec_t,s0)
+@@ -39,6 +42,7 @@ ifdef(`distro_debian',`
+ /usr/sbin/usermod	--	gen_context(system_u:object_r:useradd_exec_t,s0)
+ /usr/sbin/vigr		--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
+ /usr/sbin/vipw		--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
++/usr/sbin/vipw\.shadow		--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
+ 
+ /usr/share/cracklib(/.*)?	gen_context(system_u:object_r:crack_db_t,s0)
+ 
+diff --git a/policy/modules/apps/screen.fc b/policy/modules/apps/screen.fc
+index 7196c59..cada994 100644
+--- a/policy/modules/apps/screen.fc
++++ b/policy/modules/apps/screen.fc
+@@ -6,4 +6,5 @@ HOME_DIR/\.tmux\.conf	--	gen_context(system_u:object_r:screen_home_t,s0)
+ /run/tmux(/.*)?			gen_context(system_u:object_r:screen_runtime_t,s0)
+ 
+ /usr/bin/screen		--	gen_context(system_u:object_r:screen_exec_t,s0)
++/usr/bin/screen-.*		--	gen_context(system_u:object_r:screen_exec_t,s0)
+ /usr/bin/tmux		--	gen_context(system_u:object_r:screen_exec_t,s0)
+diff --git a/policy/modules/apps/vlock.fc b/policy/modules/apps/vlock.fc
+index f668cde..c4bc509 100644
+--- a/policy/modules/apps/vlock.fc
++++ b/policy/modules/apps/vlock.fc
+@@ -1,4 +1,5 @@
+ /usr/bin/vlock		--	gen_context(system_u:object_r:vlock_exec_t,s0)
++/usr/bin/vlock\.kbd		--	gen_context(system_u:object_r:vlock_exec_t,s0)
+ /usr/bin/vlock-main	--	gen_context(system_u:object_r:vlock_exec_t,s0)
+ 
+ /usr/sbin/vlock-main	--	gen_context(system_u:object_r:vlock_exec_t,s0)
+diff --git a/policy/modules/kernel/corecommands.fc b/policy/modules/kernel/corecommands.fc
+index b473850..515948e 100644
+--- a/policy/modules/kernel/corecommands.fc
++++ b/policy/modules/kernel/corecommands.fc
+@@ -142,6 +142,7 @@ ifdef(`distro_gentoo',`
+ /usr/bin(/.*)?				gen_context(system_u:object_r:bin_t,s0)
+ /usr/bin/d?ash			--	gen_context(system_u:object_r:shell_exec_t,s0)
+ /usr/bin/bash			--	gen_context(system_u:object_r:shell_exec_t,s0)
++/usr/bin/bash\.bash		--	gen_context(system_u:object_r:shell_exec_t,s0)
+ /usr/bin/bash2			--	gen_context(system_u:object_r:shell_exec_t,s0)
+ /usr/bin/fish			--	gen_context(system_u:object_r:shell_exec_t,s0)
+ /usr/bin/git-shell		--	gen_context(system_u:object_r:shell_exec_t,s0)
+@@ -150,6 +151,8 @@ ifdef(`distro_gentoo',`
+ /usr/bin/mkfs\.cramfs		--	gen_context(system_u:object_r:bin_t,s0)
+ /usr/bin/mksh			--	gen_context(system_u:object_r:shell_exec_t,s0)
+ /usr/bin/mountpoint		--	gen_context(system_u:object_r:bin_t,s0)
++/usr/bin/mountpoint\.sysvinit		--	gen_context(system_u:object_r:bin_t,s0)
++/usr/bin/mountpoint\.util-linux		--	gen_context(system_u:object_r:bin_t,s0)
+ /usr/bin/nologin		--	gen_context(system_u:object_r:shell_exec_t,s0)
+ /usr/bin/sash			--	gen_context(system_u:object_r:shell_exec_t,s0)
+ /usr/bin/sesh			--	gen_context(system_u:object_r:shell_exec_t,s0)
+@@ -300,6 +303,8 @@ ifdef(`distro_debian',`
+ /usr/sbin/insmod_ksymoops_clean	--	gen_context(system_u:object_r:bin_t,s0)
+ /usr/sbin/mkfs\.cramfs		--	gen_context(system_u:object_r:bin_t,s0)
+ /usr/sbin/nologin		--	gen_context(system_u:object_r:shell_exec_t,s0)
++/usr/sbin/nologin\.shadow		--	gen_context(system_u:object_r:shell_exec_t,s0)
++/usr/sbin/nologin\.util-linux		--	gen_context(system_u:object_r:shell_exec_t,s0)
+ /usr/sbin/scponlyc		--	gen_context(system_u:object_r:shell_exec_t,s0)
+ /usr/sbin/sesh			--	gen_context(system_u:object_r:shell_exec_t,s0)
+ /usr/sbin/smrsh			--	gen_context(system_u:object_r:shell_exec_t,s0)
+diff --git a/policy/modules/kernel/domain.te b/policy/modules/kernel/domain.te
+index 6922cbc..48a8fa5 100644
+--- a/policy/modules/kernel/domain.te
++++ b/policy/modules/kernel/domain.te
+@@ -114,6 +114,9 @@ term_use_controlling_term(domain)
+ # list the root directory
+ files_list_root(domain)
+ 
++# Yocto/oe-core use some var volatile links
++files_read_var_symlinks(domain)
++
+ ifdef(`hide_broken_symptoms',`
+ 	# This check is in the general socket
+ 	# listen code, before protocol-specific
+diff --git a/policy/modules/kernel/files.fc b/policy/modules/kernel/files.fc
+index ceded24..679583d 100644
+--- a/policy/modules/kernel/files.fc
++++ b/policy/modules/kernel/files.fc
+@@ -176,6 +176,7 @@ HOME_ROOT/lost\+found/.*	<<none>>
+ # /tmp
+ #
+ /tmp			-d	gen_context(system_u:object_r:tmp_t,s0-mls_systemhigh)
++/tmp			-l	gen_context(system_u:object_r:tmp_t,s0)
+ /tmp/.*				<<none>>
+ /tmp/\.journal			<<none>>
+ 
+diff --git a/policy/modules/kernel/files.if b/policy/modules/kernel/files.if
+index 2b45330..6ebe022 100644
+--- a/policy/modules/kernel/files.if
++++ b/policy/modules/kernel/files.if
+@@ -4475,6 +4475,7 @@ interface(`files_search_tmp',`
+ 	')
+ 
+ 	allow $1 tmp_t:dir search_dir_perms;
++	allow $1 tmp_t:lnk_file read_lnk_file_perms;
+ ')
+ 
+ ########################################
+@@ -4511,6 +4512,7 @@ interface(`files_list_tmp',`
+ 	')
+ 
+ 	allow $1 tmp_t:dir list_dir_perms;
++	allow $1 tmp_t:lnk_file read_lnk_file_perms;
+ ')
+ 
+ ########################################
+@@ -4547,6 +4549,7 @@ interface(`files_delete_tmp_dir_entry',`
+ 	')
+ 
+ 	allow $1 tmp_t:dir del_entry_dir_perms;
++	allow $1 tmp_t:lnk_file read_lnk_file_perms;
+ ')
+ 
+ ########################################
+@@ -4565,6 +4568,7 @@ interface(`files_read_generic_tmp_files',`
+ 	')
+ 
+ 	read_files_pattern($1, tmp_t, tmp_t)
++	allow $1 tmp_t:lnk_file read_lnk_file_perms;
+ ')
+ 
+ ########################################
+@@ -4583,6 +4587,7 @@ interface(`files_manage_generic_tmp_dirs',`
+ 	')
+ 
+ 	manage_dirs_pattern($1, tmp_t, tmp_t)
++	allow $1 tmp_t:lnk_file read_lnk_file_perms;
+ ')
+ 
+ ########################################
+@@ -4601,6 +4606,7 @@ interface(`files_manage_generic_tmp_files',`
+ 	')
+ 
+ 	manage_files_pattern($1, tmp_t, tmp_t)
++	allow $1 tmp_t:lnk_file read_lnk_file_perms;
+ ')
+ 
+ ########################################
+@@ -4637,6 +4643,7 @@ interface(`files_rw_generic_tmp_sockets',`
+ 	')
+ 
+ 	rw_sock_files_pattern($1, tmp_t, tmp_t)
++	allow $1 tmp_t:lnk_file read_lnk_file_perms;
+ ')
+ 
+ ########################################
+@@ -4844,6 +4851,7 @@ interface(`files_tmp_filetrans',`
+ 	')
+ 
+ 	filetrans_pattern($1, tmp_t, $2, $3, $4)
++	allow $1 tmp_t:lnk_file read_lnk_file_perms;
+ ')
+ 
+ ########################################
+diff --git a/policy/modules/kernel/kernel.te b/policy/modules/kernel/kernel.te
+index 7c60eda..104e5f3 100644
+--- a/policy/modules/kernel/kernel.te
++++ b/policy/modules/kernel/kernel.te
+@@ -356,6 +356,13 @@ mls_process_read_all_levels(kernel_t)
+ mls_process_write_all_levels(kernel_t)
+ mls_file_write_all_levels(kernel_t)
+ mls_file_read_all_levels(kernel_t)
++mls_socket_write_all_levels(kernel_t)
++mls_fd_use_all_levels(kernel_t)
++
++# https://bugzilla.redhat.com/show_bug.cgi?id=667370
++mls_file_downgrade(kernel_t)
++
++mls_key_write_all_levels(kernel_t)
+ 
+ ifdef(`distro_redhat',`
+ 	# Bugzilla 222337
+diff --git a/policy/modules/kernel/terminal.if b/policy/modules/kernel/terminal.if
+index 43c93e4..07cdba0 100644
+--- a/policy/modules/kernel/terminal.if
++++ b/policy/modules/kernel/terminal.if
+@@ -119,9 +119,7 @@ interface(`term_user_tty',`
+ 
+ 	# Debian login is from shadow utils and does not allow resetting the perms.
+ 	# have to fix this!
+-	ifdef(`distro_debian',`
+-		type_change $1 ttynode:chr_file $2;
+-	')
++	type_change $1 ttynode:chr_file $2;
+ 
+ 	tunable_policy(`console_login',`
+ 		# When user logs in from /dev/console, relabel it
+@@ -335,9 +333,12 @@ interface(`term_use_console',`
+ interface(`term_dontaudit_use_console',`
+ 	gen_require(`
+ 		type console_device_t;
++		type tty_device_t;
+ 	')
+ 
++	init_dontaudit_use_fds($1)
+ 	dontaudit $1 console_device_t:chr_file rw_chr_file_perms;
++	dontaudit $1 tty_device_t:chr_file rw_chr_file_perms;
+ ')
+ 
+ ########################################
+@@ -623,9 +624,11 @@ interface(`term_getattr_generic_ptys',`
+ interface(`term_dontaudit_getattr_generic_ptys',`
+ 	gen_require(`
+ 		type devpts_t;
++		type bsdpty_device_t;
+ 	')
+ 
+ 	dontaudit $1 devpts_t:chr_file getattr;
++	dontaudit $1 bsdpty_device_t:chr_file getattr;
+ ')
+ ########################################
+ ## <summary>
+@@ -641,11 +644,13 @@ interface(`term_dontaudit_getattr_generic_ptys',`
+ interface(`term_ioctl_generic_ptys',`
+ 	gen_require(`
+ 		type devpts_t;
++		type bsdpty_device_t;
+ 	')
+ 
+ 	dev_list_all_dev_nodes($1)
+ 	allow $1 devpts_t:dir search;
+ 	allow $1 devpts_t:chr_file ioctl;
++	allow $1 bsdpty_device_t:chr_file ioctl;
+ ')
+ 
+ ########################################
+@@ -663,9 +668,11 @@ interface(`term_ioctl_generic_ptys',`
+ interface(`term_setattr_generic_ptys',`
+ 	gen_require(`
+ 		type devpts_t;
++		type bsdpty_device_t;
+ 	')
+ 
+ 	allow $1 devpts_t:chr_file setattr;
++	allow $1 bsdpty_device_t:chr_file setattr;
+ ')
+ 
+ ########################################
+@@ -683,9 +690,11 @@ interface(`term_setattr_generic_ptys',`
+ interface(`term_dontaudit_setattr_generic_ptys',`
+ 	gen_require(`
+ 		type devpts_t;
++		type bsdpty_device_t;
+ 	')
+ 
+ 	dontaudit $1 devpts_t:chr_file setattr;
++	dontaudit $1 bsdpty_device_t:chr_file setattr;
+ ')
+ 
+ ########################################
+@@ -703,11 +712,13 @@ interface(`term_dontaudit_setattr_generic_ptys',`
+ interface(`term_use_generic_ptys',`
+ 	gen_require(`
+ 		type devpts_t;
++		type bsdpty_device_t;
+ 	')
+ 
+ 	dev_list_all_dev_nodes($1)
+ 	allow $1 devpts_t:dir list_dir_perms;
+ 	allow $1 devpts_t:chr_file { rw_term_perms lock append };
++	allow $1 bsdpty_device_t:chr_file { rw_term_perms lock append };
+ ')
+ 
+ ########################################
+@@ -725,9 +736,11 @@ interface(`term_use_generic_ptys',`
+ interface(`term_dontaudit_use_generic_ptys',`
+ 	gen_require(`
+ 		type devpts_t;
++		type bsdpty_device_t;
+ 	')
+ 
+ 	dontaudit $1 devpts_t:chr_file { getattr read write ioctl };
++	dontaudit $1 bsdpty_device_t:chr_file { getattr read write ioctl };
+ ')
+ 
+ #######################################
+@@ -764,10 +777,12 @@ interface(`term_create_controlling_term',`
+ interface(`term_setattr_controlling_term',`
+ 	gen_require(`
+ 		type devtty_t;
++		type bsdpty_device_t;
+ 	')
+ 
+ 	dev_list_all_dev_nodes($1)
+ 	allow $1 devtty_t:chr_file setattr;
++	allow $1 bsdpty_device_t:chr_file setattr;
+ ')
+ 
+ ########################################
+@@ -784,10 +799,12 @@ interface(`term_setattr_controlling_term',`
+ interface(`term_use_controlling_term',`
+ 	gen_require(`
+ 		type devtty_t;
++		type bsdpty_device_t;
+ 	')
+ 
+ 	dev_list_all_dev_nodes($1)
+ 	allow $1 devtty_t:chr_file { rw_term_perms lock append };
++	allow $1 bsdpty_device_t:chr_file { rw_term_perms lock append };
+ ')
+ 
+ #######################################
+diff --git a/policy/modules/roles/sysadm.te b/policy/modules/roles/sysadm.te
+index 0695d47..3e4f259 100644
+--- a/policy/modules/roles/sysadm.te
++++ b/policy/modules/roles/sysadm.te
+@@ -42,6 +42,9 @@ dev_read_kmsg(sysadm_t)
+ 
+ mls_process_read_all_levels(sysadm_t)
+ 
++mls_file_read_all_levels(sysadm_t)
++mls_process_write_to_clearance(sysadm_t)
++
+ selinux_read_policy(sysadm_t)
+ 
+ ubac_process_exempt(sysadm_t)
+@@ -81,6 +84,12 @@ ifdef(`init_systemd',`
+ 	# Allow sysadm to resolve the username of dynamic users by calling
+ 	# LookupDynamicUserByUID on org.freedesktop.systemd1.
+ 	init_dbus_chat(sysadm_t)
++
++	fs_watch_cgroup_files(sysadm_t)
++	files_watch_etc_symlinks(sysadm_t)
++	mount_watch_runtime_dirs(sysadm_t)
++	systemd_filetrans_passwd_runtime_dirs(sysadm_t)
++	allow sysadm_t systemd_passwd_runtime_t:dir watch;
+ ')
+ 
+ tunable_policy(`allow_ptrace',`
+@@ -960,6 +969,7 @@ optional_policy(`
+ ')
+ 
+ optional_policy(`
++	rpcbind_stream_connect(sysadm_t)
+ 	rpcbind_admin(sysadm_t, sysadm_r)
+ ')
+ 
+diff --git a/policy/modules/services/avahi.te b/policy/modules/services/avahi.te
+index bbec291..aa519e1 100644
+--- a/policy/modules/services/avahi.te
++++ b/policy/modules/services/avahi.te
+@@ -76,6 +76,7 @@ domain_use_interactive_fds(avahi_t)
+ 
+ files_read_etc_runtime_files(avahi_t)
+ files_read_usr_files(avahi_t)
++files_watch_etc_dirs(avahi_t)
+ 
+ auth_use_nsswitch(avahi_t)
+ 
+@@ -94,6 +95,8 @@ sysnet_etc_filetrans_config(avahi_t)
+ userdom_dontaudit_use_unpriv_user_fds(avahi_t)
+ userdom_dontaudit_search_user_home_dirs(avahi_t)
+ 
++mls_file_read_to_clearance(avahi_t)
++
+ optional_policy(`
+ 	dbus_system_domain(avahi_t, avahi_exec_t)
+ 
+diff --git a/policy/modules/services/bind.fc b/policy/modules/services/bind.fc
+index 7c1df48..9f87a21 100644
+--- a/policy/modules/services/bind.fc
++++ b/policy/modules/services/bind.fc
+@@ -1,8 +1,10 @@
+ /etc/rc\.d/init\.d/named	--	gen_context(system_u:object_r:named_initrc_exec_t,s0)
++/etc/rc\.d/init\.d/bind	--	gen_context(system_u:object_r:named_initrc_exec_t,s0)
+ /etc/rc\.d/init\.d/unbound	--	gen_context(system_u:object_r:named_initrc_exec_t,s0)
+ 
+ /etc/bind(/.*)?	gen_context(system_u:object_r:named_zone_t,s0)
+ /etc/bind/named\.conf.*	--	gen_context(system_u:object_r:named_conf_t,s0)
++/etc/bind/rndc\.conf.*	--	gen_context(system_u:object_r:named_conf_t,s0)
+ /etc/bind/rndc\.key	--	gen_context(system_u:object_r:dnssec_t,s0)
+ /etc/dnssec-trigger/dnssec_trigger_server\.key	--	gen_context(system_u:object_r:dnssec_t,s0)
+ /etc/named\.rfc1912\.zones	--	gen_context(system_u:object_r:named_conf_t,s0)
+diff --git a/policy/modules/services/bluetooth.te b/policy/modules/services/bluetooth.te
+index 3b1f9e1..a927d9e 100644
+--- a/policy/modules/services/bluetooth.te
++++ b/policy/modules/services/bluetooth.te
+@@ -60,6 +60,7 @@ allow bluetooth_t self:socket create_stream_socket_perms;
+ allow bluetooth_t self:unix_stream_socket { accept connectto listen };
+ allow bluetooth_t self:tcp_socket { accept listen };
+ allow bluetooth_t self:netlink_kobject_uevent_socket create_socket_perms;
++allow bluetooth_t self:bluetooth_socket create_stream_socket_perms;
+ 
+ read_files_pattern(bluetooth_t, bluetooth_conf_t, bluetooth_conf_t)
+ 
+@@ -127,6 +128,8 @@ userdom_dontaudit_use_unpriv_user_fds(bluetooth_t)
+ userdom_dontaudit_use_user_terminals(bluetooth_t)
+ userdom_dontaudit_search_user_home_dirs(bluetooth_t)
+ 
++init_dbus_send_script(bluetooth_t)
++
+ optional_policy(`
+ 	dbus_system_bus_client(bluetooth_t)
+ 	dbus_connect_system_bus(bluetooth_t)
+diff --git a/policy/modules/services/cron.fc b/policy/modules/services/cron.fc
+index 827363d..e841239 100644
+--- a/policy/modules/services/cron.fc
++++ b/policy/modules/services/cron.fc
+@@ -1,4 +1,5 @@
+ /etc/rc\.d/init\.d/(anacron|atd)	--	gen_context(system_u:object_r:crond_initrc_exec_t,s0)
++/etc/rc\.d/init\.d/crond	--	gen_context(system_u:object_r:crond_initrc_exec_t,s0)
+ 
+ /etc/cron\.d(/.*)?	gen_context(system_u:object_r:system_cron_spool_t,s0)
+ /etc/crontab	--	gen_context(system_u:object_r:system_cron_spool_t,s0)
+diff --git a/policy/modules/services/kerberos.fc b/policy/modules/services/kerberos.fc
+index df21fcc..ce0166e 100644
+--- a/policy/modules/services/kerberos.fc
++++ b/policy/modules/services/kerberos.fc
+@@ -12,6 +12,8 @@ HOME_DIR/\.k5login	--	gen_context(system_u:object_r:krb5_home_t,s0)
+ /etc/rc\.d/init\.d/kprop	--	gen_context(system_u:object_r:kerberos_initrc_exec_t,s0)
+ /etc/rc\.d/init\.d/krb524d	--	gen_context(system_u:object_r:kerberos_initrc_exec_t,s0)
+ /etc/rc\.d/init\.d/krb5kdc	--	gen_context(system_u:object_r:kerberos_initrc_exec_t,s0)
++/etc/rc\.d/init\.d/krb5-admin-server	--	gen_context(system_u:object_r:kerberos_initrc_exec_t,s0)
++/etc/rc\.d/init\.d/krb5-kdc	--	gen_context(system_u:object_r:kerberos_initrc_exec_t,s0)
+ 
+ /usr/bin/krb5kdc	--	gen_context(system_u:object_r:krb5kdc_exec_t,s0)
+ /usr/bin/kadmind	--	gen_context(system_u:object_r:kadmind_exec_t,s0)
+@@ -26,6 +28,8 @@ HOME_DIR/\.k5login	--	gen_context(system_u:object_r:krb5_home_t,s0)
+ 
+ /usr/sbin/krb5kdc	--	gen_context(system_u:object_r:krb5kdc_exec_t,s0)
+ /usr/sbin/kadmind	--	gen_context(system_u:object_r:kadmind_exec_t,s0)
++/usr/sbin/kadmin\.local	--	gen_context(system_u:object_r:kadmind_exec_t,s0)
++/usr/sbin/kpropd	--	gen_context(system_u:object_r:kpropd_exec_t,s0)
+ 
+ /usr/local/var/krb5kdc(/.*)?	gen_context(system_u:object_r:krb5kdc_conf_t,s0)
+ /usr/local/var/krb5kdc/principal.*	gen_context(system_u:object_r:krb5kdc_principal_t,s0)
+@@ -41,6 +45,12 @@ HOME_DIR/\.k5login	--	gen_context(system_u:object_r:krb5_home_t,s0)
+ /var/kerberos/krb5kdc/principal.*	gen_context(system_u:object_r:krb5kdc_principal_t,s0)
+ /var/kerberos/krb5kdc/principal.*\.ok	--	gen_context(system_u:object_r:krb5kdc_lock_t,s0)
+ 
++/var/krb5kdc(/.*)?	gen_context(system_u:object_r:krb5kdc_conf_t,s0)
++/var/krb5kdc/from_master.*	gen_context(system_u:object_r:krb5kdc_lock_t,s0)
++/var/krb5kdc/kadm5\.keytab	--	gen_context(system_u:object_r:krb5_keytab_t,s0)
++/var/krb5kdc/principal.*	gen_context(system_u:object_r:krb5kdc_principal_t,s0)
++/var/krb5kdc/principal.*\.ok	--	gen_context(system_u:object_r:krb5kdc_lock_t,s0)
++
+ /var/log/krb5kdc\.log.*	--	gen_context(system_u:object_r:krb5kdc_log_t,s0)
+ /var/log/kadmin\.log.*	--	gen_context(system_u:object_r:kadmind_log_t,s0)
+ /var/log/kadmind\.log.*	--	gen_context(system_u:object_r:kadmind_log_t,s0)
+diff --git a/policy/modules/services/ldap.fc b/policy/modules/services/ldap.fc
+index 0a1d08d..65b2029 100644
+--- a/policy/modules/services/ldap.fc
++++ b/policy/modules/services/ldap.fc
+@@ -1,8 +1,10 @@
+ /etc/ldap/slapd\.conf	--	gen_context(system_u:object_r:slapd_etc_t,s0)
+ /etc/openldap/certs(/.*)?	gen_context(system_u:object_r:slapd_cert_t,s0)
+ /etc/openldap/slapd\.d(/.*)?	gen_context(system_u:object_r:slapd_db_t,s0)
++/etc/openldap/slapd\.conf	--	gen_context(system_u:object_r:slapd_etc_t,s0)
+ 
+ /etc/rc\.d/init\.d/ldap	--	gen_context(system_u:object_r:slapd_initrc_exec_t,s0)
++/etc/rc\.d/init\.d/openldap	--	gen_context(system_u:object_r:slapd_initrc_exec_t,s0)
+ 
+ /usr/bin/slapd	--	gen_context(system_u:object_r:slapd_exec_t,s0)
+ 
+@@ -25,6 +27,9 @@
+ /var/log/ldap.*	gen_context(system_u:object_r:slapd_log_t,s0)
+ /var/log/slapd.*	gen_context(system_u:object_r:slapd_log_t,s0)
+ 
++/var/openldap(/.*)?	gen_context(system_u:object_r:slapd_db_t,s0)
++/var/openldap/replog(/.*)?	gen_context(system_u:object_r:slapd_replog_t,s0)
++
+ /run/ldapi	-s	gen_context(system_u:object_r:slapd_runtime_t,s0)
+ /run/openldap(/.*)?	gen_context(system_u:object_r:slapd_runtime_t,s0)
+ /run/slapd.*	-s	gen_context(system_u:object_r:slapd_runtime_t,s0)
+diff --git a/policy/modules/services/ntp.fc b/policy/modules/services/ntp.fc
+index cd69ea5..49ffe6f 100644
+--- a/policy/modules/services/ntp.fc
++++ b/policy/modules/services/ntp.fc
+@@ -25,6 +25,7 @@
+ /usr/lib/systemd/systemd-timesyncd	--	gen_context(system_u:object_r:ntpd_exec_t,s0)
+ 
+ /usr/sbin/ntpd				--	gen_context(system_u:object_r:ntpd_exec_t,s0)
++/usr/sbin/ntpd\.ntp				--	gen_context(system_u:object_r:ntpd_exec_t,s0)
+ /usr/sbin/ntpdate			--	gen_context(system_u:object_r:ntpdate_exec_t,s0)
+ /usr/sbin/sntp				--	gen_context(system_u:object_r:ntpdate_exec_t,s0)
+ 
+diff --git a/policy/modules/services/ntp.te b/policy/modules/services/ntp.te
+index b178d91..477849a 100644
+--- a/policy/modules/services/ntp.te
++++ b/policy/modules/services/ntp.te
+@@ -138,9 +138,15 @@ miscfiles_read_localization(ntpd_t)
+ userdom_dontaudit_use_unpriv_user_fds(ntpd_t)
+ userdom_list_user_home_dirs(ntpd_t)
+ 
++mls_file_read_all_levels(ntpd_t)
++
+ ifdef(`init_systemd',`
+ 	allow ntpd_t ntpd_unit_t:file read_file_perms;
+ 
++	dbus_watch_system_bus_runtime_dirs(ntpd_t)
++	allow ntpd_t system_dbusd_runtime_t:dir read;
++	dbus_watch_system_bus_runtime_named_sockets(ntpd_t)
++	allow ntpd_t system_dbusd_runtime_t:sock_file read;
+ 	dbus_system_bus_client(ntpd_t)
+ 	dbus_connect_system_bus(ntpd_t)
+ 	init_dbus_chat(ntpd_t)
+diff --git a/policy/modules/services/postgresql.fc b/policy/modules/services/postgresql.fc
+index f31a52c..f9bf468 100644
+--- a/policy/modules/services/postgresql.fc
++++ b/policy/modules/services/postgresql.fc
+@@ -27,6 +27,17 @@
+ /usr/lib/postgresql(-.*)?/(.*/)?bin/postgres		--	gen_context(system_u:object_r:postgresql_exec_t,s0)
+ /usr/lib/postgresql(-.*)?/(.*/)?bin/postmaster		-l	gen_context(system_u:object_r:postgresql_exec_t,s0)
+ 
++/usr/bin/pg_archivecleanup	--	gen_context(system_u:object_r:postgresql_exec_t,s0)
++/usr/bin/pg_basebackup	--	gen_context(system_u:object_r:postgresql_exec_t,s0)
++/usr/bin/pg_controldata	--	gen_context(system_u:object_r:postgresql_exec_t,s0)
++/usr/bin/pg_ctl		--	gen_context(system_u:object_r:postgresql_exec_t,s0)
++/usr/bin/pg_resetxlog	--	gen_context(system_u:object_r:postgresql_exec_t,s0)
++/usr/bin/pg_standby		--	gen_context(system_u:object_r:postgresql_exec_t,s0)
++/usr/bin/pg_upgrade		--	gen_context(system_u:object_r:postgresql_exec_t,s0)
++/usr/bin/pg_xlogdump		--	gen_context(system_u:object_r:postgresql_exec_t,s0)
++/usr/bin/postgres		--	gen_context(system_u:object_r:postgresql_exec_t,s0)
++/usr/bin/postmaster		-l	gen_context(system_u:object_r:postgresql_exec_t,s0)
++
+ ifdef(`distro_redhat', `
+ /usr/share/jonas/pgsql(/.*)?		gen_context(system_u:object_r:postgresql_db_t,s0)
+ ')
+diff --git a/policy/modules/services/rdisc.te b/policy/modules/services/rdisc.te
+index 4c539e8..12a75ef 100644
+--- a/policy/modules/services/rdisc.te
++++ b/policy/modules/services/rdisc.te
+@@ -47,6 +47,8 @@ sysnet_read_config(rdisc_t)
+ 
+ userdom_dontaudit_use_unpriv_user_fds(rdisc_t)
+ 
++corecmd_search_bin(rdisc_t)
++
+ optional_policy(`
+ 	seutil_sigchld_newrole(rdisc_t)
+ ')
+diff --git a/policy/modules/services/rngd.fc b/policy/modules/services/rngd.fc
+index 382c067..0ecc5ac 100644
+--- a/policy/modules/services/rngd.fc
++++ b/policy/modules/services/rngd.fc
+@@ -1,4 +1,5 @@
+ /etc/rc\.d/init\.d/rngd	--	gen_context(system_u:object_r:rngd_initrc_exec_t,s0)
++/etc/rc\.d/init\.d/rng-tools	--	gen_context(system_u:object_r:rngd_initrc_exec_t,s0)
+ 
+ /usr/bin/rngd	--	gen_context(system_u:object_r:rngd_exec_t,s0)
+ 
+diff --git a/policy/modules/services/rngd.te b/policy/modules/services/rngd.te
+index 4540e4e..48f08fb 100644
+--- a/policy/modules/services/rngd.te
++++ b/policy/modules/services/rngd.te
+@@ -21,7 +21,7 @@ files_runtime_file(rngd_runtime_t)
+ #
+ 
+ allow rngd_t self:capability { ipc_lock sys_admin };
+-allow rngd_t self:process signal;
++allow rngd_t self:process { signal getsched setsched };
+ allow rngd_t self:fifo_file rw_fifo_file_perms;
+ allow rngd_t self:unix_stream_socket { accept listen };
+ 
+@@ -34,6 +34,7 @@ dev_read_rand(rngd_t)
+ dev_read_urand(rngd_t)
+ dev_rw_tpm(rngd_t)
+ dev_write_rand(rngd_t)
++dev_read_sysfs(rngd_t)
+ 
+ files_read_etc_files(rngd_t)
+ 
+diff --git a/policy/modules/services/rpc.fc b/policy/modules/services/rpc.fc
+index 6d3c9b6..75999a5 100644
+--- a/policy/modules/services/rpc.fc
++++ b/policy/modules/services/rpc.fc
+@@ -1,7 +1,9 @@
+ /etc/exports	--	gen_context(system_u:object_r:exports_t,s0)
+ 
+ /etc/rc\.d/init\.d/nfs	--	gen_context(system_u:object_r:nfsd_initrc_exec_t,s0)
++/etc/rc\.d/init\.d/nfsserver	--	gen_context(system_u:object_r:nfsd_initrc_exec_t,s0)
+ /etc/rc\.d/init\.d/nfslock	--	gen_context(system_u:object_r:rpcd_initrc_exec_t,s0)
++/etc/rc\.d/init\.d/nfscommon	--	gen_context(system_u:object_r:rpcd_initrc_exec_t,s0)
+ /etc/rc\.d/init\.d/rpcidmapd	--	gen_context(system_u:object_r:rpcd_initrc_exec_t,s0)
+ 
+ /usr/bin/rpc\..*	--	gen_context(system_u:object_r:rpcd_exec_t,s0)
+diff --git a/policy/modules/services/rpc.te b/policy/modules/services/rpc.te
+index 500ecda..df4c042 100644
+--- a/policy/modules/services/rpc.te
++++ b/policy/modules/services/rpc.te
+@@ -142,7 +142,7 @@ optional_policy(`
+ # Local policy
+ #
+ 
+-allow rpcd_t self:capability { chown dac_override setgid setpcap setuid sys_admin };
++allow rpcd_t self:capability { chown dac_override dac_read_search setgid setpcap setuid sys_admin };
+ allow rpcd_t self:capability2 block_suspend;
+ allow rpcd_t self:process { getcap setcap };
+ allow rpcd_t self:fifo_file rw_fifo_file_perms;
+@@ -185,6 +185,8 @@ seutil_dontaudit_search_config(rpcd_t)
+ 
+ userdom_signal_all_users(rpcd_t)
+ 
++mls_file_read_to_clearance(rpcd_t)
++
+ ifdef(`distro_debian',`
+ 	term_dontaudit_use_unallocated_ttys(rpcd_t)
+ ')
+@@ -250,6 +252,8 @@ storage_raw_read_removable_device(nfsd_t)
+ 
+ miscfiles_read_public_files(nfsd_t)
+ 
++mls_file_read_to_clearance(nfsd_t)
++
+ tunable_policy(`allow_nfsd_anon_write',`
+ 	miscfiles_manage_public_files(nfsd_t)
+ ')
+diff --git a/policy/modules/services/rpcbind.te b/policy/modules/services/rpcbind.te
+index 370c9bc..5c89a13 100644
+--- a/policy/modules/services/rpcbind.te
++++ b/policy/modules/services/rpcbind.te
+@@ -25,16 +25,17 @@ files_type(rpcbind_var_lib_t)
+ # Local policy
+ #
+ 
+-allow rpcbind_t self:capability { dac_override setgid setuid sys_tty_config };
++allow rpcbind_t self:capability { dac_override setgid setuid sys_tty_config chown };
+ # net_admin is for SO_SNDBUFFORCE
+ dontaudit rpcbind_t self:capability net_admin;
+ allow rpcbind_t self:fifo_file rw_fifo_file_perms;
+ allow rpcbind_t self:unix_stream_socket { accept listen };
+ allow rpcbind_t self:tcp_socket { accept listen };
+ 
++manage_dirs_pattern(rpcbind_t, rpcbind_runtime_t, rpcbind_runtime_t)
+ manage_files_pattern(rpcbind_t, rpcbind_runtime_t, rpcbind_runtime_t)
+ manage_sock_files_pattern(rpcbind_t, rpcbind_runtime_t, rpcbind_runtime_t)
+-files_runtime_filetrans(rpcbind_t, rpcbind_runtime_t, { file sock_file })
++files_runtime_filetrans(rpcbind_t, rpcbind_runtime_t, { file sock_file dir })
+ 
+ manage_dirs_pattern(rpcbind_t, rpcbind_var_lib_t, rpcbind_var_lib_t)
+ manage_files_pattern(rpcbind_t, rpcbind_var_lib_t, rpcbind_var_lib_t)
+@@ -72,6 +73,12 @@ logging_send_syslog_msg(rpcbind_t)
+ 
+ miscfiles_read_localization(rpcbind_t)
+ 
++# nfsd_t would not be allowed to send unix_stream_socket to rpcbind_t,
++# because the are running in different level. So add rules to allow this.
++mls_socket_read_all_levels(rpcbind_t)
++mls_socket_write_all_levels(rpcbind_t)
++mls_file_read_to_clearance(rpcbind_t)
++
+ ifdef(`distro_debian',`
+ 	term_dontaudit_use_unallocated_ttys(rpcbind_t)
+ ')
+diff --git a/policy/modules/services/ssh.fc b/policy/modules/services/ssh.fc
+index 60060c3..518043a 100644
+--- a/policy/modules/services/ssh.fc
++++ b/policy/modules/services/ssh.fc
+@@ -4,6 +4,7 @@ HOME_DIR/\.ssh(/.*)?			gen_context(system_u:object_r:ssh_home_t,s0)
+ /etc/ssh/ssh_host.*_key		--	gen_context(system_u:object_r:sshd_key_t,s0)
+ 
+ /usr/bin/ssh			--	gen_context(system_u:object_r:ssh_exec_t,s0)
++/usr/bin/ssh\.openssh	--	gen_context(system_u:object_r:ssh_exec_t,s0)
+ /usr/bin/ssh-agent		--	gen_context(system_u:object_r:ssh_agent_exec_t,s0)
+ /usr/bin/ssh-keygen		--	gen_context(system_u:object_r:ssh_keygen_exec_t,s0)
+ /usr/bin/sshd			--	gen_context(system_u:object_r:sshd_exec_t,s0)
+diff --git a/policy/modules/services/ssh.te b/policy/modules/services/ssh.te
+index c6d9ac7..a459ed1 100644
+--- a/policy/modules/services/ssh.te
++++ b/policy/modules/services/ssh.te
+@@ -80,9 +80,7 @@ userdom_user_home_content(ssh_home_t)
+ type sshd_keytab_t;
+ files_type(sshd_keytab_t)
+ 
+-ifdef(`distro_debian',`
+-	init_daemon_runtime_file(sshd_runtime_t, dir, "sshd")
+-')
++init_daemon_runtime_file(sshd_runtime_t, dir, "sshd")
+ 
+ ##############################
+ #
+diff --git a/policy/modules/system/authlogin.fc b/policy/modules/system/authlogin.fc
+index 7fd3157..fa86d6f 100644
+--- a/policy/modules/system/authlogin.fc
++++ b/policy/modules/system/authlogin.fc
+@@ -5,6 +5,7 @@
+ /etc/shadow.*		--	gen_context(system_u:object_r:shadow_t,s0)
+ 
+ /usr/bin/login		--	gen_context(system_u:object_r:login_exec_t,s0)
++/usr/bin/login\.shadow		--	gen_context(system_u:object_r:login_exec_t,s0)
+ /usr/bin/pam_console_apply	--	gen_context(system_u:object_r:pam_console_exec_t,s0)
+ /usr/bin/pam_timestamp_check	--	gen_context(system_u:object_r:pam_exec_t,s0)
+ /usr/bin/unix_chkpwd		--	gen_context(system_u:object_r:chkpwd_exec_t,s0)
+diff --git a/policy/modules/system/authlogin.te b/policy/modules/system/authlogin.te
+index 9d2ccc5..e0eb9ae 100644
+--- a/policy/modules/system/authlogin.te
++++ b/policy/modules/system/authlogin.te
+@@ -100,7 +100,7 @@ allow chkpwd_t self:capability { dac_override setuid };
+ dontaudit chkpwd_t self:capability sys_tty_config;
+ allow chkpwd_t self:process { getattr signal };
+ 
+-allow chkpwd_t shadow_t:file read_file_perms;
++allow chkpwd_t shadow_t:file { read_file_perms map };
+ files_list_etc(chkpwd_t)
+ 
+ kernel_read_crypto_sysctls(chkpwd_t)
+diff --git a/policy/modules/system/clock.fc b/policy/modules/system/clock.fc
+index 3019658..1394858 100644
+--- a/policy/modules/system/clock.fc
++++ b/policy/modules/system/clock.fc
+@@ -3,3 +3,4 @@
+ /usr/bin/hwclock	--	gen_context(system_u:object_r:hwclock_exec_t,s0)
+ 
+ /usr/sbin/hwclock	--	gen_context(system_u:object_r:hwclock_exec_t,s0)
++/usr/sbin/hwclock\.util-linux	--	gen_context(system_u:object_r:hwclock_exec_t,s0)
+diff --git a/policy/modules/system/fstools.fc b/policy/modules/system/fstools.fc
+index d871294..bef7118 100644
+--- a/policy/modules/system/fstools.fc
++++ b/policy/modules/system/fstools.fc
+@@ -59,7 +59,9 @@
+ /usr/sbin/addpart		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/badblocks		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/blkid			--	gen_context(system_u:object_r:fsadm_exec_t,s0)
++/usr/sbin/blkid\.util-linux			--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/blockdev		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
++/usr/sbin/blockdev\.util-linux		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/cfdisk		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/clubufflush		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/delpart		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+@@ -73,10 +75,12 @@
+ /usr/sbin/efibootmgr		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/fatsort		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/fdisk			--	gen_context(system_u:object_r:fsadm_exec_t,s0)
++/usr/sbin/fdisk\.util-linux			--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/findfs		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/fsck.*		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/gdisk			--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/hdparm		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
++/usr/sbin/hdparm\.hdparm		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/install-mbr		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/jfs_.*		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/losetup.*		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+@@ -84,24 +88,30 @@
+ /usr/sbin/make_reiser4		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/mkdosfs		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/mke2fs		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
++/usr/sbin/mke2fs\.e2fsprogs		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/mke4fs		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/mkfs.*		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/mkraid		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/mkreiserfs		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/mkswap		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
++/usr/sbin/mkswap\.util-linux		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/parted		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/partprobe		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
++/usr/sbin/partprobe\.parted		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/partx			--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/raidautorun		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/raidstart		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
++/usr/sbin/raw			--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/reiserfs(ck|tune)	--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/resize.*fs		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/scsi_info		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/sfdisk		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/smartctl		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/swapoff		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
++/usr/sbin/swapoff\.util-linux		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/swapon.*		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/tune2fs		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
++/usr/sbin/tune2fs\.e2fsprogs		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/zdb			--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/zhack			--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+ /usr/sbin/zinject		--	gen_context(system_u:object_r:fsadm_exec_t,s0)
+diff --git a/policy/modules/system/getty.fc b/policy/modules/system/getty.fc
+index 116ea64..53ff613 100644
+--- a/policy/modules/system/getty.fc
++++ b/policy/modules/system/getty.fc
+@@ -4,6 +4,7 @@
+ /run/agetty\.reload	--	gen_context(system_u:object_r:getty_runtime_t,s0)
+ 
+ /usr/bin/.*getty	--	gen_context(system_u:object_r:getty_exec_t,s0)
++/usr/bin/start_getty	--	gen_context(system_u:object_r:bin_t,s0)
+ 
+ /usr/sbin/.*getty	--	gen_context(system_u:object_r:getty_exec_t,s0)
+ 
+diff --git a/policy/modules/system/getty.te b/policy/modules/system/getty.te
+index ce9e4de..655f652 100644
+--- a/policy/modules/system/getty.te
++++ b/policy/modules/system/getty.te
+@@ -47,6 +47,7 @@ allow getty_t getty_log_t:file { append_file_perms create_file_perms setattr_fil
+ logging_log_filetrans(getty_t, getty_log_t, file)
+ 
+ allow getty_t getty_runtime_t:dir watch;
++allow getty_t getty_runtime_t:file watch;
+ manage_files_pattern(getty_t, getty_runtime_t, getty_runtime_t)
+ files_runtime_filetrans(getty_t, getty_runtime_t, file)
+ 
+@@ -65,6 +66,7 @@ dev_read_sysfs(getty_t)
+ files_read_etc_runtime_files(getty_t)
+ files_read_etc_files(getty_t)
+ files_search_spool(getty_t)
++fs_search_tmpfs(getty_t)
+ 
+ fs_search_auto_mountpoints(getty_t)
+ # for error condition handling
+diff --git a/policy/modules/system/hostname.fc b/policy/modules/system/hostname.fc
+index 83ddeb5..cf523bc 100644
+--- a/policy/modules/system/hostname.fc
++++ b/policy/modules/system/hostname.fc
+@@ -1 +1,3 @@
+ /usr/bin/hostname	--	gen_context(system_u:object_r:hostname_exec_t,s0)
++/usr/bin/hostname\.net-tools	--	gen_context(system_u:object_r:hostname_exec_t,s0)
++/usr/bin/hostname\.coreutils	--	gen_context(system_u:object_r:hostname_exec_t,s0)
+diff --git a/policy/modules/system/init.fc b/policy/modules/system/init.fc
+index fee6ff3..a9d8f34 100644
+--- a/policy/modules/system/init.fc
++++ b/policy/modules/system/init.fc
+@@ -40,6 +40,7 @@ ifdef(`distro_gentoo',`
+ /usr/libexec/dcc/stop-.* --	gen_context(system_u:object_r:initrc_exec_t,s0)
+ 
+ /usr/sbin/init(ng)?	--	gen_context(system_u:object_r:init_exec_t,s0)
++/usr/sbin/init\.sysvinit	--	gen_context(system_u:object_r:init_exec_t,s0)
+ /usr/sbin/open_init_pty	--	gen_context(system_u:object_r:initrc_exec_t,s0)
+ /usr/sbin/upstart	--	gen_context(system_u:object_r:init_exec_t,s0)
+ 
+@@ -69,11 +70,12 @@ ifdef(`distro_redhat',`
+ ifdef(`distro_debian',`
+ /run/hotkey-setup	--	gen_context(system_u:object_r:initrc_runtime_t,s0)
+ /run/kdm/.*		--	gen_context(system_u:object_r:initrc_runtime_t,s0)
++')
++
+ /etc/network/if-pre-up\.d/.* --	gen_context(system_u:object_r:initrc_exec_t,s0)
+ /etc/network/if-up\.d/.* --	gen_context(system_u:object_r:initrc_exec_t,s0)
+ /etc/network/if-down\.d/.* --	gen_context(system_u:object_r:initrc_exec_t,s0)
+ /etc/network/if-post-down\.d/.* -- gen_context(system_u:object_r:initrc_exec_t,s0)
+-')
+ 
+ ifdef(`distro_gentoo', `
+ /var/lib/init\.d(/.*)?		gen_context(system_u:object_r:initrc_state_t,s0)
+diff --git a/policy/modules/system/init.te b/policy/modules/system/init.te
+index 9bc7cf9..986fb7d 100644
+--- a/policy/modules/system/init.te
++++ b/policy/modules/system/init.te
+@@ -208,6 +208,14 @@ mls_file_write_all_levels(init_t)
+ mls_process_write_all_levels(init_t)
+ mls_fd_use_all_levels(init_t)
+ mls_process_set_level(init_t)
++mls_key_write_all_levels(init_t)
++
++# MLS trusted for lowering/raising the level of files
++mls_file_downgrade(init_t)
++mls_file_upgrade(init_t)
++
++# MLS trusted for reading from sockets at any level
++mls_socket_read_all_levels(init_t)
+ 
+ # the following one is needed for libselinux:is_selinux_enabled()
+ # otherwise the call fails and sysvinit tries to load the policy
+diff --git a/policy/modules/system/locallogin.fc b/policy/modules/system/locallogin.fc
+index fc8d585..59e6e96 100644
+--- a/policy/modules/system/locallogin.fc
++++ b/policy/modules/system/locallogin.fc
+@@ -2,4 +2,5 @@
+ /usr/bin/sushell	--	gen_context(system_u:object_r:sulogin_exec_t,s0)
+ 
+ /usr/sbin/sulogin	--	gen_context(system_u:object_r:sulogin_exec_t,s0)
++/usr/sbin/sulogin\.util-linux	--	gen_context(system_u:object_r:sulogin_exec_t,s0)
+ /usr/sbin/sushell	--	gen_context(system_u:object_r:sulogin_exec_t,s0)
+diff --git a/policy/modules/system/logging.fc b/policy/modules/system/logging.fc
+index 5681acb..dee26a9 100644
+--- a/policy/modules/system/logging.fc
++++ b/policy/modules/system/logging.fc
+@@ -24,6 +24,7 @@
+ /usr/lib/systemd/system/auditd.* -- gen_context(system_u:object_r:auditd_unit_t,s0)
+ /usr/lib/systemd/system/[^/]*systemd-journal.* -- gen_context(system_u:object_r:syslogd_unit_t,s0)
+ /usr/lib/systemd/system/rsyslog.*\.service -- gen_context(system_u:object_r:syslogd_unit_t,s0)
++/usr/lib/systemd/system/syslog.*\.service -- gen_context(system_u:object_r:syslogd_unit_t,s0)
+ /usr/lib/systemd/systemd-journald -- gen_context(system_u:object_r:syslogd_exec_t,s0)
+ /usr/lib/systemd/systemd-kmsg-syslogd	--	gen_context(system_u:object_r:syslogd_exec_t,s0)
+ 
+@@ -52,6 +53,7 @@ ifdef(`distro_suse', `
+ /var/dnscache/log/main(/.*)?	gen_context(system_u:object_r:var_log_t,s0)
+ 
+ /var/log		-d	gen_context(system_u:object_r:var_log_t,s0-mls_systemhigh)
++/var/log		-l	gen_context(system_u:object_r:var_log_t,s0)
+ /var/log/.*			gen_context(system_u:object_r:var_log_t,s0)
+ /var/log/dmesg		--	gen_context(system_u:object_r:var_log_t,s0)
+ /var/log/syslog		--	gen_context(system_u:object_r:var_log_t,s0)
+diff --git a/policy/modules/system/logging.if b/policy/modules/system/logging.if
+index 693acf7..d576736 100644
+--- a/policy/modules/system/logging.if
++++ b/policy/modules/system/logging.if
+@@ -1066,10 +1066,12 @@ interface(`logging_append_all_inherited_logs',`
+ interface(`logging_read_all_logs',`
+ 	gen_require(`
+ 		attribute logfile;
++		type var_log_t;
+ 	')
+ 
+ 	files_search_var($1)
+ 	allow $1 logfile:dir list_dir_perms;
++	allow $1 var_log_t:lnk_file read_lnk_file_perms;
+ 	read_files_pattern($1, logfile, logfile)
+ ')
+ 
+@@ -1088,10 +1090,12 @@ interface(`logging_read_all_logs',`
+ interface(`logging_exec_all_logs',`
+ 	gen_require(`
+ 		attribute logfile;
++		type var_log_t;
+ 	')
+ 
+ 	files_search_var($1)
+ 	allow $1 logfile:dir list_dir_perms;
++	allow $1 var_log_t:lnk_file read_lnk_file_perms;
+ 	can_exec($1, logfile)
+ ')
+ 
+@@ -1153,6 +1157,7 @@ interface(`logging_manage_generic_log_dirs',`
+ 
+ 	files_search_var($1)
+ 	allow $1 var_log_t:dir manage_dir_perms;
++	allow $1 var_log_t:lnk_file read_lnk_file_perms;
+ ')
+ 
+ ########################################
+@@ -1173,6 +1178,7 @@ interface(`logging_relabel_generic_log_dirs',`
+ 
+ 	files_search_var($1)
+ 	allow $1 var_log_t:dir { relabelfrom relabelto };
++	allow $1 var_log_t:lnk_file read_lnk_file_perms;
+ ')
+ 
+ ########################################
+@@ -1193,6 +1199,7 @@ interface(`logging_read_generic_logs',`
+ 
+ 	files_search_var($1)
+ 	allow $1 var_log_t:dir list_dir_perms;
++	allow $1 var_log_t:lnk_file read_lnk_file_perms;
+ 	read_files_pattern($1, var_log_t, var_log_t)
+ ')
+ 
+@@ -1294,6 +1301,7 @@ interface(`logging_manage_generic_logs',`
+ 
+ 	files_search_var($1)
+ 	manage_files_pattern($1, var_log_t, var_log_t)
++	allow $1 var_log_t:lnk_file read_lnk_file_perms;
+ ')
+ 
+ ########################################
+@@ -1312,6 +1320,7 @@ interface(`logging_watch_generic_logs_dir',`
+ 	')
+ 
+ 	allow $1 var_log_t:dir watch;
++	allow $1 var_log_t:lnk_file read_lnk_file_perms;
+ ')
+ 
+ ########################################
+diff --git a/policy/modules/system/logging.te b/policy/modules/system/logging.te
+index 849494d..8e8e8f2 100644
+--- a/policy/modules/system/logging.te
++++ b/policy/modules/system/logging.te
+@@ -157,10 +157,12 @@ allow auditd_t auditd_etc_t:dir list_dir_perms;
+ allow auditd_t auditd_etc_t:file read_file_perms;
+ dontaudit auditd_t auditd_etc_t:file map;
+ 
++manage_dirs_pattern(auditd_t, auditd_log_t, auditd_log_t)
+ manage_files_pattern(auditd_t, auditd_log_t, auditd_log_t)
+ allow auditd_t auditd_log_t:dir setattr;
+ manage_lnk_files_pattern(auditd_t, auditd_log_t, auditd_log_t)
+ allow auditd_t var_log_t:dir search_dir_perms;
++allow auditd_t var_log_t:lnk_file read_lnk_file_perms;
+ 
+ manage_files_pattern(auditd_t, auditd_runtime_t, auditd_runtime_t)
+ manage_sock_files_pattern(auditd_t, auditd_runtime_t, auditd_runtime_t)
+@@ -176,6 +178,7 @@ dev_read_sysfs(auditd_t)
+ fs_getattr_all_fs(auditd_t)
+ fs_search_auto_mountpoints(auditd_t)
+ fs_rw_anon_inodefs_files(auditd_t)
++fs_search_tmpfs(auditd_t)
+ 
+ selinux_search_fs(auditctl_t)
+ 
+@@ -207,6 +210,8 @@ miscfiles_read_localization(auditd_t)
+ 
+ mls_file_read_all_levels(auditd_t)
+ mls_file_write_all_levels(auditd_t) # Need to be able to write to /var/run/ directory
++mls_fd_use_all_levels(auditd_t)
++mls_socket_write_all_levels(auditd_t)
+ 
+ seutil_dontaudit_read_config(auditd_t)
+ 
+@@ -288,6 +293,7 @@ allow audisp_remote_t self:capability { setpcap setuid };
+ allow audisp_remote_t self:process { getcap setcap };
+ allow audisp_remote_t self:tcp_socket create_socket_perms;
+ allow audisp_remote_t var_log_t:dir search_dir_perms;
++allow audisp_remote_t var_log_t:lnk_file read_lnk_file_perms;
+ 
+ manage_dirs_pattern(audisp_remote_t, audit_spool_t, audit_spool_t)
+ manage_files_pattern(audisp_remote_t, audit_spool_t, audit_spool_t)
+@@ -412,6 +418,7 @@ files_search_spool(syslogd_t)
+ 
+ # Allow access for syslog-ng
+ allow syslogd_t var_log_t:dir { create setattr };
++allow syslogd_t var_log_t:lnk_file read_lnk_file_perms;
+ 
+ # for systemd but can not be conditional
+ files_runtime_filetrans(syslogd_t, syslogd_tmp_t, dir, "log")
+@@ -433,6 +440,7 @@ allow syslogd_t syslogd_runtime_t:sock_file { create setattr unlink };
+ allow syslogd_t syslogd_runtime_t:file map;
+ manage_files_pattern(syslogd_t, syslogd_runtime_t, syslogd_runtime_t)
+ files_runtime_filetrans(syslogd_t, syslogd_runtime_t, file)
++fs_search_tmpfs(syslogd_t)
+ 
+ kernel_read_crypto_sysctls(syslogd_t)
+ kernel_read_system_state(syslogd_t)
+@@ -495,6 +503,10 @@ fs_getattr_all_fs(syslogd_t)
+ fs_search_auto_mountpoints(syslogd_t)
+ 
+ mls_file_write_all_levels(syslogd_t) # Need to be able to write to /var/run/ and /var/log directories
++mls_file_read_all_levels(syslogd_t)
++mls_socket_write_all_levels(syslogd_t) # Neet to be able to sendto dgram
++mls_trusted_object(syslogd_t) # Other process need to have the right to connectto/sendto /dev/log
++mls_fd_use_all_levels(syslogd_t)
+ 
+ term_write_console(syslogd_t)
+ # Allow syslog to a terminal
+@@ -512,6 +524,8 @@ init_use_fds(syslogd_t)
+ # cjp: this doesnt make sense
+ logging_send_syslog_msg(syslogd_t)
+ 
++logging_set_loginuid(syslogd_t)
++
+ miscfiles_read_localization(syslogd_t)
+ 
+ seutil_read_config(syslogd_t)
+@@ -524,7 +538,7 @@ ifdef(`init_systemd',`
+ 	allow syslogd_t self:netlink_audit_socket connected_socket_perms;
+ 	allow syslogd_t self:capability2 audit_read;
+ 	allow syslogd_t self:capability { chown setgid setuid sys_ptrace };
+-	allow syslogd_t self:netlink_audit_socket { getattr getopt read setopt write };
++	allow syslogd_t self:netlink_audit_socket { getattr getopt read setopt write nlmsg_write };
+ 
+ 	# remove /run/log/journal when switching to permanent storage
+ 	allow syslogd_t var_log_t:dir rmdir;
+diff --git a/policy/modules/system/mount.te b/policy/modules/system/mount.te
+index 8260ac4..46e7132 100644
+--- a/policy/modules/system/mount.te
++++ b/policy/modules/system/mount.te
+@@ -116,6 +116,8 @@ fs_dontaudit_write_all_image_files(mount_t)
+ mls_file_read_all_levels(mount_t)
+ mls_file_write_all_levels(mount_t)
+ 
++mls_process_write_to_clearance(mount_t)
++
+ selinux_get_enforce_mode(mount_t)
+ 
+ storage_raw_read_fixed_disk(mount_t)
+diff --git a/policy/modules/system/selinuxutil.te b/policy/modules/system/selinuxutil.te
+index ed24eda..f14770e 100644
+--- a/policy/modules/system/selinuxutil.te
++++ b/policy/modules/system/selinuxutil.te
+@@ -552,10 +552,8 @@ userdom_map_user_home_content_files(semanage_t)
+ userdom_read_user_tmp_files(semanage_t)
+ userdom_map_user_tmp_files(semanage_t)
+ 
+-ifdef(`distro_debian',`
+-	files_read_var_lib_files(semanage_t)
+-	files_read_var_lib_symlinks(semanage_t)
+-')
++files_read_var_lib_files(semanage_t)
++files_read_var_lib_symlinks(semanage_t)
+ 
+ ifdef(`distro_ubuntu',`
+ 	optional_policy(`
+diff --git a/policy/modules/system/setrans.te b/policy/modules/system/setrans.te
+index 25aadfc..0dd3a63 100644
+--- a/policy/modules/system/setrans.te
++++ b/policy/modules/system/setrans.te
+@@ -23,9 +23,7 @@ mls_trusted_object(setrans_runtime_t)
+ type setrans_unit_t;
+ init_unit_file(setrans_unit_t)
+ 
+-ifdef(`distro_debian',`
+-	init_daemon_runtime_file(setrans_runtime_t, dir, "setrans")
+-')
++init_daemon_runtime_file(setrans_runtime_t, dir, "setrans")
+ 
+ ifdef(`enable_mcs',`
+ 	init_ranged_daemon_domain(setrans_t, setrans_exec_t, s0 - mcs_systemhigh)
+@@ -73,6 +71,8 @@ mls_net_receive_all_levels(setrans_t)
+ mls_socket_write_all_levels(setrans_t)
+ mls_process_read_all_levels(setrans_t)
+ mls_socket_read_all_levels(setrans_t)
++mls_fd_use_all_levels(setrans_t)
++mls_trusted_object(setrans_t)
+ 
+ selinux_compute_access_vector(setrans_t)
+ 
+diff --git a/policy/modules/system/sysnetwork.fc b/policy/modules/system/sysnetwork.fc
+index 2a2c294..b2c89f1 100644
+--- a/policy/modules/system/sysnetwork.fc
++++ b/policy/modules/system/sysnetwork.fc
+@@ -43,6 +43,7 @@ ifdef(`distro_redhat',`
+ /usr/bin/dhcpcd		        --	gen_context(system_u:object_r:dhcpc_exec_t,s0)
+ /usr/bin/ethtool		    --	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ /usr/bin/ifconfig		    --	gen_context(system_u:object_r:ifconfig_exec_t,s0)
++/usr/bin/ifconfig\.net-tools		--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ /usr/bin/ip			        --	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ /usr/bin/ipx_configure		--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ /usr/bin/ipx_interface		--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+@@ -59,13 +60,16 @@ ifdef(`distro_redhat',`
+ /usr/sbin/dhcpcd		--	gen_context(system_u:object_r:dhcpc_exec_t,s0)
+ /usr/sbin/ethtool		--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ /usr/sbin/ifconfig		--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
++/usr/sbin/ifconfig\.net-tools		--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ /usr/sbin/ip			--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
++/usr/sbin/ip\.iproute2			--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ /usr/sbin/ipx_configure		--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ /usr/sbin/ipx_interface		--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ /usr/sbin/ipx_internal_net	--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ /usr/sbin/iw			--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ /usr/sbin/iwconfig		--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ /usr/sbin/mii-tool		--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
++/usr/sbin/mii-tool\.net-tools		--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ /usr/sbin/pump			--	gen_context(system_u:object_r:dhcpc_exec_t,s0)
+ /usr/sbin/tc			--	gen_context(system_u:object_r:ifconfig_exec_t,s0)
+ 
+@@ -83,6 +87,7 @@ ifdef(`distro_redhat',`
+ /run/dhcpcd(/.*)?		gen_context(system_u:object_r:dhcpc_runtime_t,s0)
+ /run/netns	-d		gen_context(system_u:object_r:ifconfig_runtime_t,s0)
+ /run/netns/[^/]+	--	<<none>>
++/run/resolv\.conf.*    --  gen_context(system_u:object_r:net_conf_t,s0)
+ 
+ ifdef(`distro_gentoo',`
+ /var/lib/dhcpc(/.*)?		gen_context(system_u:object_r:dhcpc_state_t,s0)
+diff --git a/policy/modules/system/sysnetwork.te b/policy/modules/system/sysnetwork.te
+index 257ff27..8a69189 100644
+--- a/policy/modules/system/sysnetwork.te
++++ b/policy/modules/system/sysnetwork.te
+@@ -319,6 +319,8 @@ kernel_request_load_module(ifconfig_t)
+ kernel_search_network_sysctl(ifconfig_t)
+ kernel_rw_net_sysctls(ifconfig_t)
+ 
++sysnet_read_dhcpc_state(ifconfig_t)
++
+ corenet_rw_tun_tap_dev(ifconfig_t)
+ 
+ dev_read_sysfs(ifconfig_t)
+diff --git a/policy/modules/system/systemd.te b/policy/modules/system/systemd.te
+index 54c2a21..efa3168 100644
+--- a/policy/modules/system/systemd.te
++++ b/policy/modules/system/systemd.te
+@@ -10,7 +10,7 @@ policy_module(systemd, 1.10.0)
+ ## Enable support for systemd-tmpfiles to manage all non-security files.
+ ## </p>
+ ## </desc>
+-gen_tunable(systemd_tmpfiles_manage_all, false)
++gen_tunable(systemd_tmpfiles_manage_all, true)
+ 
+ ## <desc>
+ ## <p>
+@@ -400,6 +400,9 @@ storage_raw_read_fixed_disk(systemd_generator_t)
+ 
+ systemd_log_parse_environment(systemd_generator_t)
+ 
++term_dontaudit_use_unallocated_ttys(systemd_generator_t)
++mls_file_write_to_clearance(systemd_generator_t)
++
+ optional_policy(`
+ 	fstools_exec(systemd_generator_t)
+ ')
+@@ -619,6 +622,8 @@ userdom_relabelto_user_runtime_dirs(systemd_logind_t)
+ userdom_setattr_user_ttys(systemd_logind_t)
+ userdom_use_user_ttys(systemd_logind_t)
+ 
++mls_file_read_to_clearance(systemd_logind_t)
++
+ # Needed to work around patch not yet merged into the systemd-logind supported on RHEL 7.x
+ # The change in systemd by Nicolas Iooss on 02-Feb-2016 with hash 4b51966cf6c06250036e428608da92f8640beb96
+ # should fix the problem where user directories in /run/user/$UID/ are not getting the proper context
+@@ -735,6 +740,8 @@ modutils_read_module_deps(systemd_modules_load_t)
+ 
+ systemd_log_parse_environment(systemd_modules_load_t)
+ 
++mls_file_read_to_clearance(systemd_modules_load_t)
++
+ ########################################
+ #
+ # networkd local policy
+@@ -791,6 +798,8 @@ sysnet_read_config(systemd_networkd_t)
+ 
+ systemd_log_parse_environment(systemd_networkd_t)
+ 
++mls_file_read_to_clearance(systemd_networkd_t)
++
+ optional_policy(`
+ 	dbus_system_bus_client(systemd_networkd_t)
+ 	dbus_connect_system_bus(systemd_networkd_t)
+@@ -1089,6 +1098,8 @@ init_dgram_send(systemd_resolved_t)
+ 
+ seutil_read_file_contexts(systemd_resolved_t)
+ 
++mls_file_read_to_clearance(systemd_resolved_t)
++
+ systemd_log_parse_environment(systemd_resolved_t)
+ systemd_read_networkd_runtime(systemd_resolved_t)
+ 
+@@ -1120,6 +1131,8 @@ seutil_read_file_contexts(systemd_sessions_t)
+ 
+ systemd_log_parse_environment(systemd_sessions_t)
+ 
++mls_file_read_to_clearance(systemd_sessions_t)
++mls_file_write_all_levels(systemd_sessions_t)
+ 
+ #########################################
+ #
+@@ -1193,6 +1206,10 @@ files_relabel_var_lib_dirs(systemd_tmpfiles_t)
+ files_relabelfrom_home(systemd_tmpfiles_t)
+ files_relabelto_home(systemd_tmpfiles_t)
+ files_relabelto_etc_dirs(systemd_tmpfiles_t)
++
++files_manage_non_auth_files(systemd_tmpfiles_t)
++files_relabel_non_auth_files(systemd_tmpfiles_t)
++
+ # for /etc/mtab
+ files_manage_etc_symlinks(systemd_tmpfiles_t)
+ 
+@@ -1240,6 +1257,11 @@ sysnet_relabel_config(systemd_tmpfiles_t)
+ 
+ systemd_log_parse_environment(systemd_tmpfiles_t)
+ 
++mls_file_write_all_levels(systemd_tmpfiles_t)
++mls_file_read_all_levels(systemd_tmpfiles_t)
++mls_file_downgrade(systemd_tmpfiles_t)
++mls_file_upgrade(systemd_tmpfiles_t)
++
+ userdom_manage_user_runtime_root_dirs(systemd_tmpfiles_t)
+ userdom_relabel_user_runtime_root_dirs(systemd_tmpfiles_t)
+ 
+@@ -1365,7 +1387,7 @@ seutil_libselinux_linked(systemd_user_session_type)
+ # systemd-user-runtime-dir local policy
+ #
+ 
+-allow systemd_user_runtime_dir_t self:capability { fowner chown sys_admin dac_read_search dac_override };
++allow systemd_user_runtime_dir_t self:capability { fowner chown sys_admin dac_read_search dac_override mknod };
+ allow systemd_user_runtime_dir_t self:process setfscreate;
+ 
+ domain_obj_id_change_exemption(systemd_user_runtime_dir_t)
+diff --git a/policy/modules/system/udev.fc b/policy/modules/system/udev.fc
+index 0ae7571..ceb5b70 100644
+--- a/policy/modules/system/udev.fc
++++ b/policy/modules/system/udev.fc
+@@ -28,6 +28,8 @@ ifdef(`distro_debian',`
+ /usr/sbin/udevstart	--	gen_context(system_u:object_r:udev_exec_t,s0)
+ /usr/sbin/wait_for_sysfs --	gen_context(system_u:object_r:udev_exec_t,s0)
+ 
++/usr/libexec/udevadm	--	gen_context(system_u:object_r:udevadm_exec_t,s0)
++
+ ifdef(`distro_redhat',`
+ /usr/sbin/start_udev --	gen_context(system_u:object_r:udev_exec_t,s0)
+ ')
+diff --git a/policy/modules/system/udev.te b/policy/modules/system/udev.te
+index f5cf891..59ec208 100644
+--- a/policy/modules/system/udev.te
++++ b/policy/modules/system/udev.te
+@@ -414,6 +414,8 @@ dev_read_urand(udevadm_t)
+ files_read_etc_files(udevadm_t)
+ files_read_usr_files(udevadm_t)
+ 
++corecmd_search_bin(udevadm_t)
++
+ init_list_runtime(udevadm_t)
+ init_read_state(udevadm_t)
+ 
+@@ -421,3 +423,6 @@ kernel_read_kernel_sysctls(udevadm_t)
+ kernel_read_system_state(udevadm_t)
+ 
+ seutil_read_file_contexts(udevadm_t)
++
++init_dontaudit_use_fds(udevadm_t)
++term_dontaudit_use_console(udevadm_t)
+-- 
+2.28.0
+
