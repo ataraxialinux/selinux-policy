@@ -8,7 +8,7 @@ pushd () { command pushd "$@" > /dev/null; }
 popd () { command popd "$@" > /dev/null; }
 
 main() {
-	local ver="2.20200818"
+	local ver="87c4adc7903ea5814865c16f2ad4d2451df5b324"
 	local opts="DISTRO=redhat SYSTEMD=y DIRECT_INITRC=y MONOLITHIC=n MLS_CATS=1024 MCS_CATS=1024"
 
 	local cwd="$(pwd)"
@@ -23,11 +23,11 @@ main() {
 
 	msg "Dwonloading sources"
 	cd "$srcs"
-	curl -C - -L -O https://github.com/SELinuxProject/refpolicy/releases/download/RELEASE_${ver/./_}/refpolicy-$ver.tar.bz2
-	bsdtar -xvf refpolicy-$ver.tar.bz2
+	curl -C - -L -O https://github.com/SELinuxProject/refpolicy/archive/$ver.tar.gz
+	bsdtar -xvf $ver.tar.gz
 
 	msg "Building multi-level security policy"
-	cd refpolicy
+	cd refpolicy-$ver
 	patch -Np1 -i "$stuff"/0001-Branch-update.patch
 	make -j clean
 	make -j NAME=mls TYPE=mls UBAC=n UNK_PERMS=deny $opts bare
