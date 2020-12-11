@@ -1,0 +1,285 @@
+From f416d726932687508fbf2f409a462731bc7414b0 Mon Sep 17 00:00:00 2001
+From: Dominick Grift <dominick.grift@defensec.nl>
+Date: Thu, 10 Dec 2020 09:56:26 +0100
+Subject: [PATCH] various ...
+
+dbus-broker maintains and maps a memfd
+dbus-broker sets socket parameters (cap_net_admin)
+chkpwd reads kernel sysctls
+locallogin send generic signals to self
+systemd resolved maintains a sock file in /run/systemd/resolve as per 247
+adds systemd resolve nss module support to authlogin (replacement for nss-dns)
+adds systemd userdb runtime basics
+adds basic (new) nss systemd module support to authlogin to resolve dynamic users using a unix domain socket instead of dbus chat with init
+udevadm is now udev (label it accordingly)
+
+Signed-off-by: Dominick Grift <dominick.grift@defensec.nl>
+---
+ policy/modules/services/dbus.te     |  9 ++++-
+ policy/modules/system/authlogin.te  | 13 ++++++-
+ policy/modules/system/init.if       | 18 ++++++++++
+ policy/modules/system/init.te       |  2 +-
+ policy/modules/system/locallogin.te |  2 +-
+ policy/modules/system/systemd.fc    |  1 +
+ policy/modules/system/systemd.if    | 54 +++++++++++++++++++++++++++++
+ policy/modules/system/systemd.te    |  5 +++
+ policy/modules/system/udev.fc       |  4 +--
+ 9 files changed, 102 insertions(+), 6 deletions(-)
+
+diff --git a/policy/modules/services/dbus.te b/policy/modules/services/dbus.te
+index c6e048c6..d192696b 100644
+--- a/policy/modules/services/dbus.te
++++ b/policy/modules/services/dbus.te
+@@ -55,6 +55,10 @@ init_mountpoint(system_dbusd_runtime_t)
+ type system_dbusd_tmp_t;
+ files_tmp_file(system_dbusd_tmp_t)
+ 
++# dbus-broker system instance memfd
++type system_dbusd_tmpfs_t;
++files_tmp_file(system_dbusd_tmpfs_t)
++
+ type system_dbusd_var_lib_t;
+ files_type(system_dbusd_var_lib_t)
+ 
+@@ -71,7 +75,7 @@ ifdef(`enable_mls',`
+ # Local policy
+ #
+ 
+-allow system_dbusd_t self:capability { dac_override setgid setpcap setuid sys_resource };
++allow system_dbusd_t self:capability { dac_override net_admin setgid setpcap setuid sys_resource };
+ dontaudit system_dbusd_t self:capability sys_tty_config;
+ allow system_dbusd_t self:process { getattr getsched signal_perms setpgid getcap setcap setrlimit };
+ allow system_dbusd_t self:fifo_file rw_fifo_file_perms;
+@@ -87,6 +91,9 @@ manage_dirs_pattern(system_dbusd_t, system_dbusd_tmp_t, system_dbusd_tmp_t)
+ manage_files_pattern(system_dbusd_t, system_dbusd_tmp_t, system_dbusd_tmp_t)
+ files_tmp_filetrans(system_dbusd_t, system_dbusd_tmp_t, { dir file })
+ 
++allow system_dbusd_t system_dbusd_tmpfs_t:file { manage_file_perms map };
++fs_tmpfs_filetrans(system_dbusd_t, system_dbusd_tmpfs_t, file)
++
+ read_files_pattern(system_dbusd_t, system_dbusd_var_lib_t, system_dbusd_var_lib_t)
+ 
+ manage_dirs_pattern(system_dbusd_t, system_dbusd_runtime_t, system_dbusd_runtime_t)
+diff --git a/policy/modules/system/authlogin.te b/policy/modules/system/authlogin.te
+index 96cb5b57..bf0bacbc 100644
+--- a/policy/modules/system/authlogin.te
++++ b/policy/modules/system/authlogin.te
+@@ -96,7 +96,7 @@ optional_policy(`
+ # Check password local policy
+ #
+ 
+-allow chkpwd_t self:capability { dac_override setuid };
++allow chkpwd_t self:capability { dac_override dac_read_search setuid };
+ dontaudit chkpwd_t self:capability sys_tty_config;
+ allow chkpwd_t self:process { getattr signal };
+ 
+@@ -104,6 +104,7 @@ allow chkpwd_t shadow_t:file read_file_perms;
+ files_list_etc(chkpwd_t)
+ 
+ kernel_read_crypto_sysctls(chkpwd_t)
++kernel_read_kernel_sysctls(chkpwd_t)
+ 
+ domain_dontaudit_use_interactive_fds(chkpwd_t)
+ 
+@@ -426,6 +427,16 @@ files_read_etc_files(nsswitch_domain)
+ 
+ sysnet_dns_name_resolve(nsswitch_domain)
+ 
++ifdef(`init_systemd',`
++	# nss systemd and nss resolve as per 247
++	init_connectto_unix_stream_sockets(nsswitch_domain)
++	init_search_runtime(nsswitch_domain)
++	systemd_list_userdb_runtime(nsswitch_domain)
++	systemd_write_userdb_runtime_sock_files(nsswitch_domain)
++
++	systemd_unix_stream_connect_resolved(nsswitch_domain)
++')
++
+ tunable_policy(`authlogin_nsswitch_use_ldap',`
+ 	miscfiles_read_generic_certs(nsswitch_domain)
+ 	sysnet_use_ldap(nsswitch_domain)
+diff --git a/policy/modules/system/init.if b/policy/modules/system/init.if
+index 4b5c7964..3036a4c3 100644
+--- a/policy/modules/system/init.if
++++ b/policy/modules/system/init.if
+@@ -926,6 +926,24 @@ interface(`init_stream_connect',`
+ 	allow $1 init_t:unix_stream_socket getattr;
+ ')
+ 
++########################################
++## <summary>
++##	Connect to init with a unix stream socket.
++## </summary>
++## <param name="domain">
++##	<summary>
++##	Domain allowed access.
++##	</summary>
++## </param>
++#
++interface(`init_connectto_unix_stream_sockets',`
++	gen_require(`
++		type init_t;
++	')
++
++	allow $1 init_t:unix_stream_socket connectto;
++')
++
+ ########################################
+ ## <summary>
+ ##	Inherit and use file descriptors from init.
+diff --git a/policy/modules/system/init.te b/policy/modules/system/init.te
+index 97dbe48b..9532e73f 100644
+--- a/policy/modules/system/init.te
++++ b/policy/modules/system/init.te
+@@ -244,7 +244,7 @@ ifdef(`init_systemd',`
+ 	allow init_t self:udp_socket create_socket_perms;
+ 	allow init_t self:netlink_route_socket create_netlink_socket_perms;
+ 	allow init_t initrc_t:unix_dgram_socket create_socket_perms;
+-	allow init_t self:capability2 audit_read;
++	allow init_t self:capability2 { audit_read bpf perfmon };
+ 	allow init_t self:key { search setattr write };
+ 	allow init_t self:bpf { map_create map_read map_write prog_load prog_run };
+ 
+diff --git a/policy/modules/system/locallogin.te b/policy/modules/system/locallogin.te
+index 39f3ee0d..f5a745ec 100644
+--- a/policy/modules/system/locallogin.te
++++ b/policy/modules/system/locallogin.te
+@@ -34,7 +34,7 @@ role system_r types sulogin_t;
+ 
+ allow local_login_t self:capability { chown dac_read_search dac_override fowner fsetid kill setgid setuid sys_nice sys_resource sys_tty_config };
+ dontaudit local_login_t self:capability net_admin;
+-allow local_login_t self:process { getcap setcap setexec setrlimit setsched };
++allow local_login_t self:process { getcap setcap setexec setrlimit setsched signal };
+ allow local_login_t self:fd use;
+ allow local_login_t self:fifo_file rw_fifo_file_perms;
+ allow local_login_t self:sock_file read_sock_file_perms;
+diff --git a/policy/modules/system/systemd.fc b/policy/modules/system/systemd.fc
+index 4d1d400a..66e83ab2 100644
+--- a/policy/modules/system/systemd.fc
++++ b/policy/modules/system/systemd.fc
+@@ -73,6 +73,7 @@
+ /run/systemd/resolve(/.*)?  gen_context(system_u:object_r:systemd_resolved_runtime_t,s0)
+ /run/systemd/seats(/.*)?	gen_context(system_u:object_r:systemd_sessions_runtime_t,s0)
+ /run/systemd/sessions(/.*)?	gen_context(system_u:object_r:systemd_sessions_runtime_t,s0)
++/run/systemd/userdb(/.*)?	gen_context(system_u:object_r:systemd_userdb_runtime_t,s0)
+ /run/systemd/users(/.*)?	gen_context(system_u:object_r:systemd_logind_runtime_t,s0)
+ /run/systemd/inhibit(/.*)?	gen_context(system_u:object_r:systemd_logind_inhibit_runtime_t,s0)
+ /run/systemd/nspawn(/.*)?	gen_context(system_u:object_r:systemd_nspawn_runtime_t,s0)
+diff --git a/policy/modules/system/systemd.if b/policy/modules/system/systemd.if
+index 0fd3c4fd..c0991804 100644
+--- a/policy/modules/system/systemd.if
++++ b/policy/modules/system/systemd.if
+@@ -1097,6 +1097,60 @@ interface(`systemd_read_resolved_runtime',`
+ 	read_files_pattern($1, systemd_resolved_runtime_t, systemd_resolved_runtime_t)
+ ')
+ 
++#######################################
++## <summary>
++##  list systemd userdb runtime
++## </summary>
++## <param name="domain">
++## <summary>
++##  domain allowed access
++## </summary>
++## </param>
++#
++interface(`systemd_list_userdb_runtime',`
++	gen_require(`
++		type systemd_userdb_runtime_t;
++	')
++
++	allow $1 systemd_userdb_runtime_t:dir list_dir_perms;
++')
++
++#######################################
++## <summary>
++##  Write systemd userdb runtime sock files
++## </summary>
++## <param name="domain">
++## <summary>
++##  domain allowed access
++## </summary>
++## </param>
++#
++interface(`systemd_write_userdb_runtime_sock_files',`
++	gen_require(`
++		type systemd_userdb_runtime_t;
++	')
++
++	write_sock_files_pattern($1, systemd_userdb_runtime_t, systemd_userdb_runtime_t)
++')
++
++#######################################
++## <summary>
++##  Connect to systemd resolved with a unix stream socket
++## </summary>
++## <param name="domain">
++## <summary>
++##  domain allowed access
++## </summary>
++## </param>
++#
++interface(`systemd_unix_stream_connect_resolved',`
++	gen_require(`
++		type systemd_resolved_t, systemd_resolved_runtime_t;
++	')
++
++	stream_connect_pattern($1, systemd_resolved_runtime_t, systemd_resolved_runtime_t, systemd_resolved_t)
++')
++
+ #######################################
+ ## <summary>
+ ##  Allow domain to getattr on .updated file (generated by systemd-update-done
+diff --git a/policy/modules/system/systemd.te b/policy/modules/system/systemd.te
+index 985105ed..de5774dd 100644
+--- a/policy/modules/system/systemd.te
++++ b/policy/modules/system/systemd.te
+@@ -275,6 +275,9 @@ init_system_domain(systemd_user_runtime_dir_t, systemd_user_runtime_dir_exec_t)
+ type systemd_user_tmpfs_t;
+ userdom_user_tmpfs_file(systemd_user_tmpfs_t)
+ 
++type systemd_userdb_runtime_t;
++files_runtime_file(systemd_userdb_runtime_t)
++
+ #
+ # Unit file types
+ #
+@@ -1128,11 +1131,13 @@ allow systemd_resolved_t self:capability { chown net_raw setgid setpcap setuid }
+ allow systemd_resolved_t self:process { getcap setcap setfscreate signal };
+ 
+ allow systemd_resolved_t self:tcp_socket { accept listen };
++allow systemd_resolved_t self:unix_stream_socket { accept listen };
+ 
+ allow systemd_resolved_t systemd_networkd_runtime_t:dir watch;
+ 
+ manage_dirs_pattern(systemd_resolved_t, systemd_resolved_runtime_t, systemd_resolved_runtime_t)
+ manage_files_pattern(systemd_resolved_t, systemd_resolved_runtime_t, systemd_resolved_runtime_t)
++manage_sock_files_pattern(systemd_resolved_t, systemd_resolved_runtime_t, systemd_resolved_runtime_t)
+ init_runtime_filetrans(systemd_resolved_t, systemd_resolved_runtime_t, dir)
+ 
+ dev_read_sysfs(systemd_resolved_t)
+diff --git a/policy/modules/system/udev.fc b/policy/modules/system/udev.fc
+index 0ae7571c..5ee69b6f 100644
+--- a/policy/modules/system/udev.fc
++++ b/policy/modules/system/udev.fc
+@@ -10,7 +10,7 @@
+ /etc/udev/scripts/.+ --	gen_context(system_u:object_r:udev_helper_exec_t,s0)
+ 
+ /usr/bin/udev		--	gen_context(system_u:object_r:udev_exec_t,s0)
+-/usr/bin/udevadm	--	gen_context(system_u:object_r:udevadm_exec_t,s0)
++/usr/bin/udevadm	--	gen_context(system_u:object_r:udev_exec_t,s0)
+ /usr/bin/udevd		--	gen_context(system_u:object_r:udev_exec_t,s0)
+ /usr/bin/udevinfo	--	gen_context(system_u:object_r:udev_exec_t,s0)
+ /usr/bin/udevsend	--	gen_context(system_u:object_r:udev_exec_t,s0)
+@@ -22,7 +22,7 @@ ifdef(`distro_debian',`
+ ')
+ 
+ /usr/sbin/udev		--	gen_context(system_u:object_r:udev_exec_t,s0)
+-/usr/sbin/udevadm	--	gen_context(system_u:object_r:udevadm_exec_t,s0)
++/usr/sbin/udevadm	--	gen_context(system_u:object_r:udev_exec_t,s0)
+ /usr/sbin/udevd		--	gen_context(system_u:object_r:udev_exec_t,s0)
+ /usr/sbin/udevsend	--	gen_context(system_u:object_r:udev_exec_t,s0)
+ /usr/sbin/udevstart	--	gen_context(system_u:object_r:udev_exec_t,s0)
+-- 
+2.29.2
+
