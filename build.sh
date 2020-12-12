@@ -29,7 +29,6 @@ main() {
 	msg "Building multi-level security policy"
 	cd refpolicy-$ver
 	patch -Np1 -i "$stuff"/0001-Branch-update.patch
-	patch -Np1 -i "$stuff"/0002-various.patch
 	make -j clean
 	make -j NAME=targeted TYPE=mcs UBAC=y UNK_PERMS=allow $opts bare
 	make -j NAME=targeted TYPE=mcs UBAC=y UNK_PERMS=allow $opts conf
